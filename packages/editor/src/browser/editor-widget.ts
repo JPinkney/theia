@@ -5,7 +5,7 @@
  * You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  */
 
-import { SelectionService } from '@theia/core/lib/common';
+import { SelectionService, Disposable } from '@theia/core/lib/common';
 import { Widget, BaseWidget, Message, Saveable, SaveableSource, Navigatable } from '@theia/core/lib/browser';
 import URI from '@theia/core/lib/common/uri';
 import { TextEditor } from "./editor";
@@ -20,7 +20,7 @@ export class EditorWidget extends BaseWidget implements SaveableSource, Navigata
         this.toDispose.push(this.editor);
         this.toDispose.push(this.editor.onSelectionChanged(() => {
             if (this.editor.isFocused()) {
-                this.selectionService.selection = this.editor;
+                this.updateGlobalSelection();
             }
         }));
     }
@@ -36,7 +36,15 @@ export class EditorWidget extends BaseWidget implements SaveableSource, Navigata
     protected onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg);
         this.editor.focus();
+        this.updateGlobalSelection();
+    }
+
+    protected updateGlobalSelection(): void {
         this.selectionService.selection = this.editor;
+        const removeGlobalSelection = this.toDispose.push(Disposable.create(() =>
+            this.selectionService.selection = undefined
+        ));
+        this.toDispose.push(this.selectionService.onSelectionChanged(() => removeGlobalSelection.dispose()));
     }
 
     protected onAfterAttach(msg: Message): void {

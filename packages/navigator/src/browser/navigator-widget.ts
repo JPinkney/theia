@@ -9,7 +9,7 @@ import { injectable, inject, postConstruct } from 'inversify';
 import { h } from '@phosphor/virtualdom/lib';
 import { Message } from '@phosphor/messaging';
 import URI from '@theia/core/lib/common/uri';
-import { SelectionService, CommandService } from '@theia/core/lib/common';
+import { SelectionService, CommandService, Disposable } from '@theia/core/lib/common';
 import { CommonCommands } from '@theia/core/lib/browser/common-frontend-contribution';
 import { ContextMenuRenderer, TreeProps, TreeModel, TreeNode, LabelProvider, Widget, SelectableTreeNode, ExpandableTreeNode } from '@theia/core/lib/browser';
 import { FileTreeWidget, DirNode, FileNode } from '@theia/filesystem/lib/browser';
@@ -81,6 +81,17 @@ export class FileNavigatorWidget extends FileTreeWidget {
                 }
             })
         ]);
+    }
+
+    protected updateGlobalSelection(selection: ReadonlyArray<Readonly<SelectableTreeNode>>): void {
+        if (this.shell.activeWidget !== this) {
+            return;
+        }
+        this.selectionService.selection = selection;
+        const removeGlobalSelection = this.toDispose.push(Disposable.create(() =>
+            this.selectionService.selection = undefined
+        ));
+        this.toDispose.push(this.selectionService.onSelectionChanged(() => removeGlobalSelection.dispose()));
     }
 
     protected initialize(): void {

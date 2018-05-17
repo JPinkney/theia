@@ -14,9 +14,10 @@ import { FileStatNode, DirNode, FileNode } from "./file-tree";
 import { LocationService } from '../location';
 import { LabelProvider } from "@theia/core/lib/browser/label-provider";
 import * as base64 from 'base64-js';
+import { UriSelection } from "@theia/core";
 
 @injectable()
-export class FileTreeModel extends TreeModelImpl implements LocationService {
+export class FileTreeModel extends TreeModelImpl implements LocationService, UriSelection.Composite {
 
     @inject(LabelProvider) protected readonly labelProvider: LabelProvider;
     @inject(FileSystem) protected readonly fileSystem: FileSystem;
@@ -26,6 +27,10 @@ export class FileTreeModel extends TreeModelImpl implements LocationService {
     protected init(): void {
         super.init();
         this.toDispose.push(this.watcher.onFilesChanged(changes => this.onFilesChanged(changes)));
+    }
+
+    get selectedElements(): UriSelection[] {
+        return this.selectedFileStatNodes;
     }
 
     get location(): URI | undefined {

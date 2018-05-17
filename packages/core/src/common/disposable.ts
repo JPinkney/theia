@@ -14,6 +14,10 @@ export interface Disposable {
 }
 
 export namespace Disposable {
+    export function is(obj: Object | undefined): obj is Disposable {
+        // tslint:disable-next-line:no-any
+        return typeof obj === 'object' && ('dispose' in obj) && typeof (<any>obj)['dispose'] === 'function';
+    }
     export function create(func: () => void): Disposable {
         return {
             dispose: func

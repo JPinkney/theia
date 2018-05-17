@@ -7,6 +7,7 @@
 
 import { injectable } from 'inversify';
 import { Emitter, Event } from '../common/event';
+import { Disposable, DisposableCollection } from '../common/disposable';
 
 // tslint:disable:no-any
 
@@ -15,22 +16,30 @@ export interface SelectionProvider<T> {
 }
 
 @injectable()
-export class SelectionService implements SelectionProvider<any> {
+export class SelectionService implements SelectionProvider<Object | undefined> {
 
-    private currentSelection: any;
-    private selectionListeners: Emitter<any> = new Emitter();
+    private currentSelection: Object | undefined;
 
-    get selection(): any {
+    protected readonly onSelectionChangedEmitter = new Emitter<any>();
+    readonly onSelectionChanged: Event<any> = this.onSelectionChangedEmitter.event;
+
+    get selection(): Object | undefined {
         return this.currentSelection;
     }
 
-    set selection(selection: any) {
+    protected readonly toDisposeOnSelection = new DisposableCollection();
+    set selection(selection: Object | undefined) {
+        this.toDisposeOnSelection.dispose();
         this.currentSelection = selection;
-        this.selectionListeners.fire(this.currentSelection);
-    }
-
-    get onSelectionChanged(): Event<any> {
-        return this.selectionListeners.event;
+        if (Disposable.is(selection)) {
+            const disposeSelection = selection.dispose;
+            selection.dispose = () => {
+                this.selection = undefined;
+                disposeSelection.bind(selection)();
+            };
+            this.toDisposeOnSelection.push(Disposable.create(() => selection.dispose = disposeSelection));
+        }
+        this.onSelectionChangedEmitter.fire(this.currentSelection);
     }
 
 }

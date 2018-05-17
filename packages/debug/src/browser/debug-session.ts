@@ -25,9 +25,13 @@ export interface DebugSession extends Disposable {
     initialize(): Promise<DebugProtocol.InitializeResponse>;
     configurationDone(): Promise<DebugProtocol.ConfigurationDoneResponse>;
     disconnect(): Promise<DebugProtocol.InitializeResponse>;
+    pauseThread(threadID: number): Promise<DebugProtocol.PauseResponse>;
+    resumeThread(threadID: number): Promise<DebugProtocol.ContinueResponse>;
+    getThreads(): Promise<DebugProtocol.ThreadsResponse>;
 }
 
 export class DebugSessionImpl implements DebugSession {
+
     private sequence: number;
 
     protected readonly toDispose = new DisposableCollection();
@@ -92,6 +96,26 @@ export class DebugSessionImpl implements DebugSession {
 
     disconnect(): Promise<DebugProtocol.DisconnectResponse> {
         return this.proceedRequest("disconnect", { terminateDebuggee: true });
+    }
+
+    pauseThread(threadID: number): Promise<DebugProtocol.PauseResponse> {
+        return this.proceedRequest("pause", {
+            arguments: {
+                threadId: threadID
+            }
+        });
+    }
+
+    resumeThread(threadID: number): Promise<DebugProtocol.ContinueResponse> {
+        return (this.proceedRequest("continue", {
+            arguments: {
+                threadId: threadID
+            }
+        })) as Promise<DebugProtocol.ContinueResponse>;
+    }
+
+    getThreads(): Promise<DebugProtocol.ThreadsResponse> {
+        return this.proceedRequest("threads") as Promise<DebugProtocol.ThreadsResponse>;
     }
 
     protected handleMessage(event: MessageEvent) {
@@ -165,6 +189,7 @@ export class DebugSessionManager implements Disposable {
     protected readonly onDidChangeActiveDebugSessionEmitter = new Emitter<DebugSession | undefined>();
     protected readonly onDidStartDebugSessionEmitter = new Emitter<DebugSession>();
     protected readonly onDidTerminateDebugSessionEmitter = new Emitter<DebugSession>();
+    protected pauseAvailable = true;
 
     constructor(
         @inject(DebugSessionFactory)
@@ -263,4 +288,13 @@ export class DebugSessionManager implements Disposable {
     get onDidTerminateDebugSession(): Event<DebugSession> {
         return this.onDidTerminateDebugSessionEmitter.event;
     }
+
+    toggleSuspendAction(): void {
+        this.pauseAvailable = !this.pauseAvailable;
+    }
+
+    get isSuspendActionAvailable(): boolean {
+        return this.pauseAvailable;
+    }
+
 }

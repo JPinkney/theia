@@ -15,6 +15,7 @@ import { MAIN_MENU_BAR, MenuPath } from "@theia/core/lib/common/menu";
 import { DebugService } from "../common/debug-model";
 import { DebugSessionManager } from "./debug-session";
 import { DebugConfigurationManager } from "./debug-configuration";
+import { DebugProtocol } from "vscode-debugprotocol";
 
 export const DEBUG_SESSION_CONTEXT_MENU: MenuPath = ['debug-session-context-menu'];
 
@@ -98,6 +99,20 @@ export class DebugCommandHandlers implements MenuContribution, CommandContributi
                         debugSession.initialize().then((response) => {
                             if (response.success) {
                                 this.debugSessionManager.setActiveDebugSession(debugSession.sessionId);
+
+                                debugSession.setBreakpointsRequest(undefined, undefined, undefined, undefined).then(respBody => {
+                                    debugSession.checkBreakpointForRegistration(respBody.body.breakpoints);
+                                }).then(
+                                    debugSession.setFunctionBreakpointsRequest(null).then(respBody => {
+                                        debugSession.checkBreakpointForRegistration(respBody.body.breakpoints);
+                                    })
+                                ).then(
+                                    debugSession.setFunctionBreakpointsRequest(null).then(respBody => {
+                                        debugSession.checkBreakpointForRegistration(respBody.body.breakpoints);
+                                    })
+                                ).then(
+                                    debugSession.configurationDone()
+                                );
                             }
                         });
                     });

@@ -25,6 +25,11 @@ export interface DebugSession extends Disposable {
     initialize(): Promise<DebugProtocol.InitializeResponse>;
     configurationDone(): Promise<DebugProtocol.ConfigurationDoneResponse>;
     disconnect(): Promise<DebugProtocol.InitializeResponse>;
+    setBreakpointsRequest(source: DebugProtocol.Source, breakpoints: DebugProtocol.SourceBreakpoint[],
+        lines: number[], sourceModified: boolean): Promise<DebugProtocol.SetBreakpointsResponse>;
+    setFunctionBreakpointsRequest(functionBreakpointArray: DebugProtocol.FunctionBreakpoint[]): Promise<DebugProtocol.SetFunctionBreakpointsResponse>;
+    setExceptionBreakpointsRequest(filters: string[], exceptionOptions: DebugProtocol.ExceptionOptions[]): Promise<DebugProtocol.SetExceptionBreakpointsResponse>;
+    checkBreakpointForRegistration(breakpoints: DebugProtocol.Breakpoint[]): void;
 }
 
 export class DebugSessionImpl implements DebugSession {
@@ -64,7 +69,7 @@ export class DebugSessionImpl implements DebugSession {
         return initialized.promise;
     }
 
-    initialize(): Promise<DebugProtocol.InitializeResponse> {
+    initialize(exceptionBreakpointFilters?: DebugProtocol.ExceptionBreakpointsFilter[]): Promise<DebugProtocol.InitializeResponse> {
         return this.proceedRequest("initialize", {
             clientID: "Theia",
             clientName: "Theia",
@@ -75,7 +80,11 @@ export class DebugSessionImpl implements DebugSession {
             pathFormat: "path",
             supportsVariableType: false,
             supportsVariablePaging: false,
-            supportsRunInTerminalRequest: false
+            supportsRunInTerminalRequest: false,
+            supportsFunctionBreakpoints: true,
+            supportsConditionalBreakpoints: true,
+            supportsConfigurationDoneRequest: true,
+            exceptionBreakpointFilters: exceptionBreakpointFilters
         }).then(response => {
             this.capabilities = response.body || {};
             return response;
@@ -92,6 +101,35 @@ export class DebugSessionImpl implements DebugSession {
 
     disconnect(): Promise<DebugProtocol.DisconnectResponse> {
         return this.proceedRequest("disconnect", { terminateDebuggee: true });
+    }
+
+    setBreakpointsRequest(source: DebugProtocol.Source, breakpoints: DebugProtocol.SourceBreakpoint[],
+        lines: number[], sourceModified: boolean): Promise<DebugProtocol.SetBreakpointsResponse> {
+        return this.proceedRequest("setBreakpoints", {
+            source: source,
+            breakpoints: breakpoints,
+            lines: lines,
+            sourceModified: sourceModified
+        } as DebugProtocol.SetBreakpointsArguments) as Promise<DebugProtocol.SetBreakpointsResponse>;
+    }
+
+    setFunctionBreakpointsRequest(functionBreakpointArray: DebugProtocol.FunctionBreakpoint[]): Promise<DebugProtocol.SetFunctionBreakpointsResponse> {
+        return this.proceedRequest("setFunctionBreakpoints", {
+            breakpoints: functionBreakpointArray
+        } as DebugProtocol.SetFunctionBreakpointsArguments) as Promise<DebugProtocol.SetFunctionBreakpointsResponse>;
+    }
+
+    setExceptionBreakpointsRequest(filters: string[], exceptionOptions: DebugProtocol.ExceptionOptions[]): Promise<DebugProtocol.SetExceptionBreakpointsResponse> {
+        return this.proceedRequest("setExceptionBreakpoints", {
+            filters: filters,
+            exceptionOptions: exceptionOptions
+        } as DebugProtocol.SetExceptionBreakpointsArguments) as Promise<DebugProtocol.SetExceptionBreakpointsResponse>;
+    }
+
+    /**
+     * Check to see if the breakpoint is registered so that we can show that to client
+     */
+    checkBreakpointForRegistration(breakpoints: DebugProtocol.Breakpoint[]): void {
     }
 
     protected handleMessage(event: MessageEvent) {

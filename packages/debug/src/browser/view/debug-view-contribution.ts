@@ -18,14 +18,15 @@ import {
     SideTabBar,
     LEFT_RIGHT_AREA_CLASS,
     Widget,
-    Message
+    Message,
+    ContextMenuRenderer
 } from "@theia/core/lib/browser";
 import { DebugSessionManager, DebugSession } from "../debug-session";
 import { DEBUG_SESSION_CONTEXT_MENU } from "../debug-command";
 import { inject, injectable, postConstruct } from "inversify";
 import { DebugThreadsWidget } from "./debug-threads-widget";
 import { DebugStackFramesWidget } from "./debug-stack-frames-widget";
-
+import { DebugThreadSelectionService, ThreadSelection } from "../debug-selection-service";
 export const DEBUG_FACTORY_ID = 'debug';
 
 /**
@@ -37,7 +38,9 @@ export class DebugWidget extends Panel {
 
     constructor(
         @inject(DebugSessionManager) protected readonly debugSessionManager: DebugSessionManager,
-        @inject(TabBarRendererFactory) protected readonly tabBarRendererFactory: () => TabBarRenderer) {
+        @inject(TabBarRendererFactory) protected readonly tabBarRendererFactory: () => TabBarRenderer,
+        @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer,
+        @inject(DebugThreadSelectionService) protected readonly selectionService: DebugThreadSelectionService) {
         super();
 
         this.id = DEBUG_FACTORY_ID;
@@ -72,7 +75,7 @@ export class DebugWidget extends Panel {
             currentTitle.owner.hide();
         }
 
-        const widget = new DebugTargetWidget(debugSession);
+        const widget = new DebugTargetWidget(debugSession, this.contextMenuRenderer, this.selectionService);
         this.tabBar.addTab(widget.title);
         this.tabBar.currentTitle = widget.title;
         this.node.appendChild(widget.node);
@@ -145,7 +148,9 @@ export class DebugTargetWidget extends Widget {
     private threads: DebugThreadsWidget;
     private stackFrames: DebugStackFramesWidget;
 
-    constructor(protected readonly debugSession: DebugSession) {
+    constructor(protected readonly debugSession: DebugSession,
+        @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer,
+        @inject(DebugThreadSelectionService) protected readonly selectionService: DebugThreadSelectionService) {
         super();
         this.sessionId = debugSession.sessionId;
         this.title.label = debugSession.configuration.name;
@@ -155,9 +160,16 @@ export class DebugTargetWidget extends Widget {
         this.stackFrames = new DebugStackFramesWidget(debugSession);
         this.stackFrames.onDidSelectStackFrame(stackFrameId => { });
 
-        this.threads = new DebugThreadsWidget(debugSession);
-        this.threads.onDidSelectThread(threadId => this.stackFrames.threadId = threadId);
-
+        this.threads = new DebugThreadsWidget(debugSession, contextMenuRenderer);
+        this.threads.onDidSelectThread(threadId => {
+            this.stackFrames.threadId = threadId;
+            if (threadId) {
+                selectionService.selection = {
+                    threadId: threadId,
+                    status: this.threads.getStatusByThreadID(threadId)
+                } as ThreadSelection;
+            }
+        });
         this.node.appendChild(this.threads.node);
         this.node.appendChild(this.stackFrames.node);
     }

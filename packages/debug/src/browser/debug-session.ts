@@ -32,6 +32,7 @@ export interface DebugSession extends Disposable, NodeJS.EventEmitter {
     threads(): Promise<DebugProtocol.ThreadsResponse>;
     stacks(threadId: number): Promise<DebugProtocol.StackTraceResponse>;
     pause(threadId: number): Promise<DebugProtocol.PauseResponse>;
+    resume(threadId: number): Promise<DebugProtocol.ContinueResponse>;
     disconnect(): Promise<DebugProtocol.InitializeResponse>;
 }
 
@@ -120,6 +121,10 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
 
     pause(threadId: number): Promise<DebugProtocol.PauseResponse> {
         return this.proceedRequest("pause", { threadId });
+    }
+
+    resume(threadId: number): Promise<DebugProtocol.ContinueResponse> {
+        return this.proceedRequest("continue", { threadId });
     }
 
     stacks(threadId: number): Promise<DebugProtocol.StackTraceResponse> {

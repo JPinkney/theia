@@ -28,6 +28,7 @@ import {
 import { DebugSessionManager, DebugSessionFactory } from './debug-session';
 
 import '../../src/browser/style/index.css';
+import { DebugThreadSelectionService } from './debug-selection-service';
 
 export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Unbind, isBound: interfaces.IsBound, rebind: interfaces.Rebind) => {
     bind(DebugWidget).toSelf();
@@ -37,6 +38,7 @@ export default new ContainerModule((bind: interfaces.Bind, unbind: interfaces.Un
     })).inSingletonScope();
     bindViewContribution(bind, DebugViewContribution);
 
+    bind(DebugThreadSelectionService).toSelf().inSingletonScope();
     bind(DebugSessionFactory).toSelf().inSingletonScope();
     bind(DebugSessionManager).toSelf().inSingletonScope();
     bind(MenuContribution).to(DebugCommandHandlers);

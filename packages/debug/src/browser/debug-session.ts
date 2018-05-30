@@ -31,8 +31,8 @@ export interface DebugSession extends Disposable, NodeJS.EventEmitter {
     launch(args: DebugProtocol.LaunchRequestArguments): Promise<DebugProtocol.LaunchResponse>;
     threads(): Promise<DebugProtocol.ThreadsResponse>;
     stacks(threadId: number): Promise<DebugProtocol.StackTraceResponse>;
-    pause(threadId: number): Promise<DebugProtocol.PauseResponse>;
-    resume(threadId: number): Promise<DebugProtocol.ContinueResponse>;
+    pause(threadId?: number): Promise<DebugProtocol.PauseResponse> | Promise<DebugProtocol.PauseResponse>[];
+    resume(threadId?: number): Promise<DebugProtocol.ContinueResponse>;
     disconnect(): Promise<DebugProtocol.InitializeResponse>;
 }
 
@@ -119,11 +119,32 @@ export class DebugSessionImpl extends EventEmitter implements DebugSession {
         return this.proceedRequest("threads");
     }
 
-    pause(threadId: number): Promise<DebugProtocol.PauseResponse> {
+    pause(threadId?: number): Promise<DebugProtocol.PauseResponse> | Promise<DebugProtocol.PauseResponse>[] {
+        if (!threadId) {
+            this.threads().then(response => {
+                const threads: DebugProtocol.Thread[] = response.body.threads;
+                const requests = [];
+                for (const thread of threads) {
+                    const pauseReponse = this.proceedRequest("pause", { threadId }) as Promise<DebugProtocol.PauseResponse>;
+                    this.emit('changeStatus', thread.id, false);
+                    requests.push(pauseReponse);
+                }
+                return requests;
+            });
+        }
         return this.proceedRequest("pause", { threadId });
     }
 
     resume(threadId: number): Promise<DebugProtocol.ContinueResponse> {
+        if (!threadId) {
+            this.threads().then(response => {
+                const threads: DebugProtocol.Thread[] = response.body.threads;
+                for (const thread of threads) {
+                    this.proceedRequest("continue", { threadId });
+                    this.emit('changeStatus', thread.id, false);
+                }
+            });
+        }
         return this.proceedRequest("continue", { threadId });
     }
 

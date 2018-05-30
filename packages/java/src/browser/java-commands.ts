@@ -50,12 +50,15 @@ export class JavaCommandContribution implements CommandContribution, MenuContrib
 
     registerCommands(commands: CommandRegistry): void {
         commands.registerCommand(SHOW_JAVA_REFERENCES, {
-            execute: (uri: string, position: Position, locations: Location[]) =>
-                commands.executeCommand(EditorCommands.SHOW_REFERENCES.id, uri, position, locations)
+            execute: (uri: string, position: Position, locations: Location[]) => {
+                commands.executeCommand(EditorCommands.SHOW_REFERENCES.id, uri, position, locations);
+            }
         });
         commands.registerCommand(APPLY_WORKSPACE_EDIT, {
-            execute: (changes: WorkspaceEdit) =>
-                !!this.workspace.applyEdit && this.workspace.applyEdit(changes)
+            execute: (changes: WorkspaceEdit) => {
+                // tslint:disable-next-line:no-unused-expression
+                !!this.workspace.applyEdit && this.workspace.applyEdit(changes);
+            }
         });
         commands.registerCommand(JAVA_ORGANIZE_IMPORTS, {
             execute: async (changes: WorkspaceEdit) => {

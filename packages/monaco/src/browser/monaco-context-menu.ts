@@ -16,7 +16,7 @@ import { CommandRegistry } from "@phosphor/commands";
 @injectable()
 export class MonacoContextMenuService implements IContextMenuService {
 
-    constructor( @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer) {
+    constructor(@inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer) {
     }
 
     showContextMenu(delegate: IContextMenuDelegate): void {

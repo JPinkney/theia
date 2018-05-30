@@ -9,13 +9,14 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 
-import { VirtualWidget, SELECTED_CLASS, ContextMenuRenderer } from "@theia/core/lib/browser";
+import { VirtualWidget, SELECTED_CLASS, ContextMenuRenderer, Menu } from "@theia/core/lib/browser";
 import { DebugSession } from "../debug-session";
 import { h } from '@phosphor/virtualdom';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { Emitter, Event } from "@theia/core";
+import { Emitter, Event, CommandRegistry } from "@theia/core";
 import { inject } from "inversify";
-import { DEBUG_SESSION_THREAD_CONTEXT_MENU } from '../debug-command';
+import { CommandRegistry as phosphorRegistry } from "@phosphor/commands";
+import { DEBUG_COMMANDS } from "../debug-command";
 
 /**
  * Is it used to display list of threads.
@@ -28,7 +29,8 @@ export class DebugThreadsWidget extends VirtualWidget {
     private readonly onDidSelectThreadEmitter = new Emitter<number | undefined>();
 
     constructor(protected readonly debugSession: DebugSession,
-        @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer) {
+        @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer,
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry) {
         super();
         this.id = this.toDocumentId();
         this.addClass(Styles.THREADS_CONTAINER);
@@ -87,8 +89,17 @@ export class DebugThreadsWidget extends VirtualWidget {
         return this.onDidSelectThreadEmitter.event;
     }
 
-    public getStatusByThreadID(threadID: number) {
-        return this._threadStatus.get(threadID);
+    public getStatusByThreadID(threadID?: number): boolean {
+        if (!this._threadId) {
+            return false;
+        }
+        if (!threadID && this._threadId) {
+            return !!this._threadStatus.get(this._threadId);
+        }
+        if (threadID) {
+            return !!this._threadStatus.get(threadID);
+        }
+        return false;
     }
 
     protected render(): h.Child {
@@ -110,7 +121,36 @@ export class DebugThreadsWidget extends VirtualWidget {
                         event.preventDefault();
                         event.stopPropagation();
                         this.onDidSelectThreadEmitter.fire(this.threadId);
-                        this.contextMenuRenderer.render(DEBUG_SESSION_THREAD_CONTEXT_MENU, event);
+
+                        const commands = new phosphorRegistry();
+                        const menu = new Menu({
+                            commands
+                        });
+
+                        commands.addCommand(DEBUG_COMMANDS.TOGGLE_THREAD_STATUS.id, {
+                            execute: (threadInfo: any) => {
+                                if (threadInfo["threadID"] === -1) {
+                                    return;
+                                }
+                                if (threadInfo["threadStatus"]) {
+                                    this.debugSession.pause(threadInfo["threadID"]);
+                                } else {
+                                    this.debugSession.resume(threadInfo["threadID"]);
+                                }
+                            },
+                            label: this.getStatusByThreadID() ? "Resume" : "Suspend"
+                        });
+
+                        menu.addItem({
+                            type: 'command',
+                            command: DEBUG_COMMANDS.TOGGLE_THREAD_STATUS.id,
+                            args: {
+                                "threadID": this._threadId ? this._threadId : -1,
+                                "threadStatus": this.getStatusByThreadID()
+                            }
+                        });
+
+                        menu.open(event.x, event.y);
                     }
                 }, thread.name);
             items.push(item);

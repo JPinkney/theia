@@ -26,7 +26,7 @@ import { DEBUG_SESSION_CONTEXT_MENU } from "../debug-command";
 import { inject, injectable, postConstruct } from "inversify";
 import { DebugThreadsWidget } from "./debug-threads-widget";
 import { DebugStackFramesWidget } from "./debug-stack-frames-widget";
-import { DebugThreadSelectionService, ThreadSelection } from "../debug-selection-service";
+import { CommandRegistry } from "@theia/core/lib/common/command";
 export const DEBUG_FACTORY_ID = 'debug';
 
 /**
@@ -40,7 +40,7 @@ export class DebugWidget extends Panel {
         @inject(DebugSessionManager) protected readonly debugSessionManager: DebugSessionManager,
         @inject(TabBarRendererFactory) protected readonly tabBarRendererFactory: () => TabBarRenderer,
         @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer,
-        @inject(DebugThreadSelectionService) protected readonly selectionService: DebugThreadSelectionService) {
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry) {
         super();
 
         this.id = DEBUG_FACTORY_ID;
@@ -75,7 +75,7 @@ export class DebugWidget extends Panel {
             currentTitle.owner.hide();
         }
 
-        const widget = new DebugTargetWidget(debugSession, this.contextMenuRenderer, this.selectionService);
+        const widget = new DebugTargetWidget(debugSession, this.contextMenuRenderer, this.commandRegistry);
         this.tabBar.addTab(widget.title);
         this.tabBar.currentTitle = widget.title;
         this.node.appendChild(widget.node);
@@ -150,7 +150,7 @@ export class DebugTargetWidget extends Widget {
 
     constructor(protected readonly debugSession: DebugSession,
         @inject(ContextMenuRenderer) protected readonly contextMenuRenderer: ContextMenuRenderer,
-        @inject(DebugThreadSelectionService) protected readonly selectionService: DebugThreadSelectionService) {
+        @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry) {
         super();
         this.sessionId = debugSession.sessionId;
         this.title.label = debugSession.configuration.name;
@@ -160,15 +160,10 @@ export class DebugTargetWidget extends Widget {
         this.stackFrames = new DebugStackFramesWidget(debugSession);
         this.stackFrames.onDidSelectStackFrame(stackFrameId => { });
 
-        this.threads = new DebugThreadsWidget(debugSession, contextMenuRenderer);
+        this.threads = new DebugThreadsWidget(debugSession, contextMenuRenderer, commandRegistry);
         this.threads.onDidSelectThread(threadId => {
             this.stackFrames.threadId = threadId;
-            if (threadId) {
-                selectionService.selection = {
-                    threadId: threadId,
-                    status: this.threads.getStatusByThreadID(threadId)
-                } as ThreadSelection;
-            }
+            this.threads.threadId = threadId;
         });
         this.node.appendChild(this.threads.node);
         this.node.appendChild(this.stackFrames.node);

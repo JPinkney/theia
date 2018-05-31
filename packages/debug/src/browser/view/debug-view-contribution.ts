@@ -163,7 +163,6 @@ export class DebugTargetWidget extends Widget {
         this.threads = new DebugThreadsWidget(debugSession, contextMenuRenderer, commandRegistry);
         this.threads.onDidSelectThread(threadId => {
             this.stackFrames.threadId = threadId;
-            this.threads.threadId = threadId;
         });
         this.node.appendChild(this.threads.node);
         this.node.appendChild(this.stackFrames.node);

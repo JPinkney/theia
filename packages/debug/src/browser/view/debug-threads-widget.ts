@@ -85,21 +85,23 @@ export class DebugThreadsWidget extends VirtualWidget {
         this._threadId = threadId;
     }
 
+    get threadStatus(): Map<number, boolean> {
+        return this._threadStatus;
+    }
+
+    set threadStatus(newThreadStatus: Map<number, boolean>) {
+        this._threadStatus = newThreadStatus;
+    }
+
     get onDidSelectThread(): Event<number | undefined> {
         return this.onDidSelectThreadEmitter.event;
     }
 
     public getStatusByThreadID(threadID?: number): boolean {
-        if (!this._threadId) {
-            return false;
+        if (!threadID) {
+            return !!this._threadId && !!this._threadStatus.get(this._threadId);
         }
-        if (!threadID && this._threadId) {
-            return !!this._threadStatus.get(this._threadId);
-        }
-        if (threadID) {
-            return !!this._threadStatus.get(threadID);
-        }
-        return false;
+        return !!this._threadStatus.get(threadID);
     }
 
     protected render(): h.Child {
@@ -128,26 +130,22 @@ export class DebugThreadsWidget extends VirtualWidget {
                         });
 
                         commands.addCommand(DEBUG_COMMANDS.TOGGLE_THREAD_STATUS.id, {
-                            execute: (threadInfo: any) => {
-                                if (threadInfo["threadID"] === -1) {
+                            execute: () => {
+                                if (!this.threadId) {
                                     return;
                                 }
-                                if (threadInfo["threadStatus"]) {
-                                    this.debugSession.pause(threadInfo["threadID"]);
+                                if (this.getStatusByThreadID(this.threadId)) {
+                                    this.debugSession.pause(this.threadId);
                                 } else {
-                                    this.debugSession.resume(threadInfo["threadID"]);
+                                    this.debugSession.resume(this.threadId);
                                 }
                             },
-                            label: this.getStatusByThreadID() ? "Resume" : "Suspend"
+                            label: this.getStatusByThreadID() ? "Suspend" : "Resume"
                         });
 
                         menu.addItem({
                             type: 'command',
-                            command: DEBUG_COMMANDS.TOGGLE_THREAD_STATUS.id,
-                            args: {
-                                "threadID": this._threadId ? this._threadId : -1,
-                                "threadStatus": this.getStatusByThreadID()
-                            }
+                            command: DEBUG_COMMANDS.TOGGLE_THREAD_STATUS.id
                         });
 
                         menu.open(event.x, event.y);

@@ -24,6 +24,20 @@ export interface ActionableMessage {
     commands?: Command[];
 }
 
+export interface ProgressReport {
+    id: string;
+    task: string;
+    subTask: string;
+    status: string;
+    workDone: number;
+    totalWork: number;
+    complete: boolean;
+}
+
+export namespace ProgressReportNotification {
+    export const type = new NotificationType<ProgressReport, void>('language/progressReport');
+}
+
 export namespace ClassFileContentsRequest {
     export const type = new RequestType<TextDocumentIdentifier, string | undefined, void, void>('java/classFileContents');
 }

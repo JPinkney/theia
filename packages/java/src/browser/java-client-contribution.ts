@@ -20,7 +20,7 @@ import {
     Window, ILanguageClient, BaseLanguageClientContribution, Workspace, Languages, LanguageClientFactory, LanguageClientOptions
 } from '@theia/languages/lib/browser';
 import { JAVA_LANGUAGE_ID, JAVA_LANGUAGE_NAME } from '../common';
-import { ActionableNotification, ActionableMessage } from "./java-protocol";
+import { ActionableNotification, ActionableMessage, ProgressReportNotification, ProgressReport } from "./java-protocol";
 
 @injectable()
 export class JavaClientContribution extends BaseLanguageClientContribution {
@@ -44,7 +44,12 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
 
     protected onReady(languageClient: ILanguageClient): void {
         languageClient.onNotification(ActionableNotification.type, this.showActionableMessage.bind(this));
+        languageClient.onNotification(ProgressReportNotification.type, this.showProgressReportNotifications.bind(this));
         super.onReady(languageClient);
+    }
+
+    protected showProgressReportNotifications(progressReport: ProgressReport) {
+
     }
 
     protected showActionableMessage(message: ActionableMessage): void {

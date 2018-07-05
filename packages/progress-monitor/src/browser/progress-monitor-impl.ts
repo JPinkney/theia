@@ -16,32 +16,24 @@
 
 export const PROGRESS_MONITOR_WIDGET_KIND = 'progressMonitorView';
 
-export interface IProgressMonitor {
-    getWorkItem(): string;
-    getText(): string;
-    getProgress(): number;
+export interface ProgressReport {
+    id: string;
+    task: string;
+    subTask: string;
+    status: string;
+    workDone: number;
+    totalWork: number;
+    complete: boolean;
 }
 
-export class ProgressMonitorImpl implements IProgressMonitor {
+export class ProgressReportImpl implements ProgressReport {
 
-    private workItem: string;
-    private textString: string;
-    private progress: number;
-
-    constuctor(workItem: string, textString: string, progress: number) {
-        this.workItem = workItem;
-        this.textString = textString;
-        this.progress = progress;
-    }
-
-    getWorkItem(): string {
-        return this.workItem;
-    }
-    getText(): string {
-        return this.textString;
-    }
-    getProgress(): number {
-        return this.progress;
-    }
+    id: string;
+    task: string;
+    subTask: string;
+    status: string;
+    workDone: number;
+    totalWork: number;
+    complete: boolean;
 
 }

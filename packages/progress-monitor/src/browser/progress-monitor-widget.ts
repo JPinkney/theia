@@ -15,75 +15,32 @@
  ********************************************************************************/
 
 import { injectable, postConstruct, inject } from "inversify";
-import { Message, Panel, StatusBar, StatusBarEntry, StatusBarAlignment } from "@theia/core/lib/browser";
-import { EditorManager } from "@theia/editor/lib/browser";
-// import { ProgressMonitorItem } from "./progress-monitor-item";
-import { IProgressMonitor } from "./progress-monitor-impl";
-import { ProgressMonitorItem } from "./progress-monitor-item";
+import { Panel } from "@theia/core/lib/browser";
+import { ProgressMonitorManager } from "./progress-monitor-manager";
 
 export const PROGRESS_MONITOR_WIDGET_KIND = 'progressMonitorView';
 
-/**
- * This class is going to be the base of all the status bars
- */
 @injectable()
 export class ProgressMonitorWidget extends Panel {
 
-    private readonly progressNotificationName = "progress-monitor-notification";
-    private statusBarTimeout: NodeJS.Timer;
-    private progressItems: Map<string, ProgressMonitorItem>;
-
-    constructor( @inject(StatusBar) protected readonly statusBar: StatusBar,
-        @inject(EditorManager) protected readonly editorManager: EditorManager) {
+    constructor(@inject(ProgressMonitorManager) protected readonly progressMonitorManager: ProgressMonitorManager) {
         super();
         this.id = PROGRESS_MONITOR_WIDGET_KIND;
         this.title.label = 'Progress Monitor';
-        this.title.iconClass = 'fa fa-flag';
+        this.title.iconClass = 'fa fa-spinner';
         this.title.closable = true;
         this.addClass('theia-progress-monitor');
     }
 
     @postConstruct()
     protected init(): void {
-        this.update();
-    }
+        this.progressMonitorManager.onProgressItemAdded(item => {
+            // Display the item
+            this.addWidget(item);
+        });
+        this.progressMonitorManager.onProgressItemDelete(item => {
+            // Remove the item
 
-    protected onActivateRequest(msg: Message): void {
-        super.onActivateRequest(msg);
-        this.node.focus();
-    }
-
-    protected onUpdateRequest(msg: Message): void {
-        super.onUpdateRequest(msg);
-        this.showProgressMessage("dfgdfg");
-    }
-
-    protected showProgressMessage(message: string) {
-        const widget = this.editorManager.currentEditor;
-        if (widget) {
-            clearTimeout(this.statusBarTimeout);
-            const statusEntry = {
-                alignment: StatusBarAlignment.LEFT,
-                priority: 1,
-                text: message
-            } as StatusBarEntry;
-            this.statusBar.setElement(this.progressNotificationName, statusEntry);
-            this.statusBarTimeout = setTimeout(() => {
-                this.statusBar.removeElement(this.progressNotificationName);
-            }, 3000);
-        } else {
-            this.statusBar.removeElement(this.progressNotificationName);
-        }
-    }
-
-    public updateProgressItem(progressItemName: string, monitor: IProgressMonitor) {
-        const progressItem = this.progressItems.get(progressItemName);
-        if (progressItem) {
-            progressItem.updateProgress(monitor);
-        } else {
-            const newProgressItem = new ProgressMonitorItem(monitor);
-            this.progressItems.set(progressItemName, newProgressItem);
-            newProgressItem.activate();
-        }
+        });
     }
 }

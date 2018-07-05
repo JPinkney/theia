@@ -16,22 +16,13 @@
 
 import { RequestType, NotificationType } from 'vscode-jsonrpc';
 import { TextDocumentIdentifier, Command, MessageType } from "@theia/languages/lib/common";
+import { ProgressReport } from "@theia/progress-monitor/lib/browser";
 
 export interface ActionableMessage {
     severity: MessageType;
     message: string;
     data?: any;
     commands?: Command[];
-}
-
-export interface ProgressReport {
-    id: string;
-    task: string;
-    subTask: string;
-    status: string;
-    workDone: number;
-    totalWork: number;
-    complete: boolean;
 }
 
 export namespace ProgressReportNotification {

@@ -33,6 +33,7 @@
     "@theia/preview": "^0.3.12",
     "@theia/process": "^0.3.12",
     "@theia/python": "^0.3.12",
+    "@theia/progress-monitor": "0.3.12",
     "@theia/search-in-workspace": "^0.3.12",
     "@theia/task": "^0.3.12",
     "@theia/terminal": "^0.3.12",

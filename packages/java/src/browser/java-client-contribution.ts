@@ -20,7 +20,8 @@ import {
     Window, ILanguageClient, BaseLanguageClientContribution, Workspace, Languages, LanguageClientFactory, LanguageClientOptions
 } from '@theia/languages/lib/browser';
 import { JAVA_LANGUAGE_ID, JAVA_LANGUAGE_NAME } from '../common';
-import { ActionableNotification, ActionableMessage, ProgressReportNotification, ProgressReport } from "./java-protocol";
+import { ActionableNotification, ActionableMessage, ProgressReportNotification } from "./java-protocol";
+import { ProgressReport, ProgressMonitorManager } from "@theia/progress-monitor/lib/browser";
 
 @injectable()
 export class JavaClientContribution extends BaseLanguageClientContribution {
@@ -33,7 +34,8 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         @inject(Languages) protected readonly languages: Languages,
         @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
         @inject(Window) protected readonly window: Window,
-        @inject(CommandService) protected readonly commandService: CommandService
+        @inject(CommandService) protected readonly commandService: CommandService,
+        @inject(ProgressMonitorManager) protected readonly progressMonitorManager: ProgressMonitorManager
     ) {
         super(workspace, languages, languageClientFactory);
     }
@@ -49,7 +51,7 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
     }
 
     protected showProgressReportNotifications(progressReport: ProgressReport) {
-
+        this.progressMonitorManager.createProgressMonitorItem(progressReport);
     }
 
     protected showActionableMessage(message: ActionableMessage): void {

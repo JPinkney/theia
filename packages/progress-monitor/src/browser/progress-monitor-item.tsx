@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import * as React from "react";
-import { IProgressMonitor } from "./progress-monitor-impl";
+import { ProgressReport } from "./progress-monitor-impl";
 import { ReactWidget } from "@theia/core/lib/browser/widgets/react-widget";
 
 export const PROGRESS_MONITOR_WIDGET_KIND = 'progressMonitorView';
@@ -25,14 +25,14 @@ export const PROGRESS_MONITOR_WIDGET_KIND = 'progressMonitorView';
  */
 export class ProgressMonitorItem extends ReactWidget {
 
-    private monitor: IProgressMonitor;
+    private monitor: ProgressReport;
 
     private style = {
-        width: this.monitor.getProgress() + '%',
+        width: this.monitor.workDone / this.monitor.totalWork + '%',
         height: '50px',
     };
 
-    constructor(monitor: IProgressMonitor) {
+    constructor(monitor: ProgressReport) {
         super();
         this.monitor = monitor;
     }
@@ -40,15 +40,15 @@ export class ProgressMonitorItem extends ReactWidget {
     protected render(): React.ReactNode {
         return (
             <div className="theia-progress-monitor-item">
-                <h6>{this.monitor.getWorkItem()}</h6>
+                <h6>{this.monitor.id}</h6>
                 <div style={this.style}>
                 </div>
-                <h4>{this.monitor.getText()}</h4>
+                <h4>{this.monitor.status}</h4>
             </div>
         );
     }
 
-    public updateProgress(monitor: IProgressMonitor) {
+    public updateProgress(monitor: ProgressReport) {
         this.monitor = monitor;
         this.update();
     }

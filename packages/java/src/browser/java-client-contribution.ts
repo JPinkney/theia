@@ -20,8 +20,9 @@ import {
     Window, ILanguageClient, BaseLanguageClientContribution, Workspace, Languages, LanguageClientFactory, LanguageClientOptions
 } from '@theia/languages/lib/browser';
 import { JAVA_LANGUAGE_ID, JAVA_LANGUAGE_NAME } from '../common';
-import { ActionableNotification, ActionableMessage, StatusReport, StatusNotification } from './java-protocol';
+import { ActionableNotification, ActionableMessage, StatusReport, StatusNotification, ProgressReportNotification } from './java-protocol';
 import { StatusBar, StatusBarEntry, StatusBarAlignment } from '@theia/core/lib/browser';
+import { ProgressReport, ProgressService } from '@theia/progress-monitor/lib/browser';
 
 @injectable()
 export class JavaClientContribution extends BaseLanguageClientContribution {
@@ -37,7 +38,8 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
         @inject(Window) protected readonly window: Window,
         @inject(CommandService) protected readonly commandService: CommandService,
-        @inject(StatusBar) protected readonly statusBar: StatusBar
+        @inject(StatusBar) protected readonly statusBar: StatusBar,
+        @inject(ProgressService) protected readonly progressMonitorService: ProgressService
     ) {
         super(workspace, languages, languageClientFactory);
     }
@@ -53,6 +55,7 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
     protected onReady(languageClient: ILanguageClient): void {
         languageClient.onNotification(ActionableNotification.type, this.showActionableMessage.bind(this));
         languageClient.onNotification(StatusNotification.type, this.showStatusMessage.bind(this));
+        languageClient.onNotification(ProgressReportNotification.type, this.showProgressReportNotifications.bind(this));
         super.onReady(languageClient);
     }
 
@@ -73,6 +76,11 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         }, 5000);
     }
 
+    protected showProgressReportNotifications(progressReport: ProgressReport) {
+        const javaProgressReport = Object.assign(progressReport, { location: 'Java' });
+        this.progressMonitorService.addOrUpdateContribution(javaProgressReport);
+    }
+
     protected showActionableMessage(message: ActionableMessage): void {
         const items = message.commands || [];
         this.window.showMessage(message.severity, message.message, ...items).then(command => {
@@ -87,7 +95,8 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         const options = super.createOptions();
         options.initializationOptions = {
             extendedClientCapabilities: {
-                classFileContentsSupport: true
+                classFileContentsSupport: true,
+                progressReportProvider: true
             }
         };
         return options;

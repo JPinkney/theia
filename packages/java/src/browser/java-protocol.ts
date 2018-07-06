@@ -16,6 +16,7 @@
 
 import { RequestType, NotificationType } from 'vscode-jsonrpc';
 import { TextDocumentIdentifier, Command, MessageType } from '@theia/languages/lib/browser';
+import { ProgressReport } from '@theia/progress-monitor/lib/browser';
 
 export interface StatusReport {
     message: string;
@@ -39,4 +40,8 @@ export namespace ClassFileContentsRequest {
 
 export namespace ActionableNotification {
     export const type = new NotificationType<ActionableMessage, void>('language/actionableNotification');
+}
+
+export namespace ProgressReportNotification {
+    export const type = new NotificationType<ProgressReport, void>('language/progressReport');
 }

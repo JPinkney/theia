@@ -39,6 +39,7 @@ import {
     DefinitionLink,
     DocumentLink
 } from './model';
+import { DocumentSymbol, SymbolInformation } from 'monaco-languageclient';
 
 export interface PluginInitData {
     plugins: PluginMetadata[];
@@ -659,6 +660,7 @@ export interface LanguagesExt {
     ): Promise<ModelSingleEditOperation[] | undefined>;
     $provideDocumentLinks(handle: number, resource: UriComponents): Promise<DocumentLink[] | undefined>;
     $resolveDocumentLink(handle: number, link: DocumentLink): Promise<DocumentLink | undefined>;
+    $provideDocumentSymbol(handle: number, resource: UriComponents): Promise<SymbolInformation[] | DocumentSymbol[]>
 }
 
 export interface LanguagesMain {
@@ -676,6 +678,7 @@ export interface LanguagesMain {
     $registerRangeFormattingProvider(handle: number, selector: SerializedDocumentFilter[]): void;
     $registerOnTypeFormattingProvider(handle: number, selector: SerializedDocumentFilter[], autoFormatTriggerCharacters: string[]): void;
     $registerDocumentLinkProvider(handle: number, selector: SerializedDocumentFilter[]): void;
+    $registerDocumentSymbolProvider(handle: number, selector: SerializedDocumentFilter[]): void
 }
 
 export const PLUGIN_RPC_CONTEXT = {

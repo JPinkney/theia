@@ -154,6 +154,29 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
+    $registerDocumentSymbolProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+        const languageSelector = fromLanguageSelector(selector);
+        const documentSymbolProvider = this.createDocumentSymbolProvider(handle, languageSelector);
+        const disposable = new DisposableCollection();
+        for (const language of getLanguages()) {
+            if (this.matchLanguage(languageSelector, language)) {
+                disposable.push(monaco.languages.registerDocumentSymbolProvider(language, documentSymbolProvider));
+            }
+        }
+        this.disposables.set(handle, disposable);
+    }
+
+    protected createDocumentSymbolProvider(handle: number, selector: LanguageSelector | undefined): monaco.languages.DocumentSymbolProvider {
+        return {
+            provideDocumentSymbols: (model, token) => {
+                if (!this.matchModel(selector, MonacoModelIdentifier.fromModel(model))) {
+                    return undefined!;
+                }
+                return this.proxy.$provideDocumentSymbol(handle, model.uri).then(v => v!);
+            }
+        };
+    }
+
     $registerDocumentLinkProvider(handle: number, selector: SerializedDocumentFilter[]): void {
         const languageSelector = fromLanguageSelector(selector);
         const linkProvider = this.createLinkProvider(handle, languageSelector);

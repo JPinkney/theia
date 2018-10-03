@@ -16,6 +16,7 @@
 
 import * as theia from '@theia/plugin';
 import { UriComponents } from '../common/uri-components';
+import { SymbolInformation, DocumentSymbol } from 'monaco-languageclient';
 
 // Should contains internal Plugin API types
 
@@ -234,4 +235,8 @@ export interface DocumentLink {
 export interface DocumentLinkProvider {
     provideLinks(model: monaco.editor.ITextModel, token: monaco.CancellationToken): DocumentLink[] | undefined | PromiseLike<DocumentLink[] | undefined>;
     resolveLink?: (link: DocumentLink, token: monaco.CancellationToken) => DocumentLink | PromiseLike<DocumentLink[]>;
+}
+
+export interface DocumentSymbolProvider {
+    provideDocumentSymbols(model: monaco.editor.ITextModel, token: monaco.CancellationToken): Promise<SymbolInformation[] | DocumentSymbol[]>
 }

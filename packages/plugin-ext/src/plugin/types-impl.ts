@@ -1139,7 +1139,7 @@ export class SymbolInformation {
     location: Location;
     kind: SymbolKind;
     containerName: undefined | string;
-    constructor(name: string, kind: SymbolKind, containerName: string, location: Location);
+    constructor(name: string, kind: SymbolKind, containerName: string, location: Location | undefined);
     constructor(name: string, kind: SymbolKind, range: Range, uri?: URI, containerName?: string);
     constructor(name: string, kind: SymbolKind, rangeOrContainer: string | Range, locationOrUri?: Location | URI, containerName?: string) {
         this.name = name;
@@ -1204,14 +1204,14 @@ export class DocumentSymbol {
 }
 
 export enum FileChangeType {
-	Changed = 1,
-	Created = 2,
-	Deleted = 3,
+    Changed = 1,
+    Created = 2,
+    Deleted = 3,
 }
 
 export enum FileType {
-	Unknown = 0,
-	File = 1,
-	Directory = 2,
-	SymbolicLink = 64
+    Unknown = 0,
+    File = 1,
+    Directory = 2,
+    SymbolicLink = 64
 }

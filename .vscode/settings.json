@@ -5,7 +5,6 @@
 // - Mac: $HOME/Library/Application Support/Code/User/settings.json
 {
     "tslint.enable": true,
-    "editor.formatOnSave": true,
     "search.exclude": {
         "**/node_modules": true,
         "**/lib": true,
@@ -48,5 +47,7 @@
         "editor.tabSize": 2
     },
     "typescript.tsdk": "node_modules/typescript/lib",
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+    "javascript.preferences.quoteStyle": "single",
+    "typescript.preferences.quoteStyle": "single"
 }

@@ -17,6 +17,7 @@
 import { injectable } from 'inversify';
 import { QuickOpenModel } from './quick-open-model';
 import { MessageType } from '../../common/message-service-protocol';
+import { Event, Emitter } from '../../common/event';
 
 export type QuickOpenOptions = Partial<QuickOpenOptions.Resolved>;
 export namespace QuickOpenOptions {
@@ -27,6 +28,16 @@ export namespace QuickOpenOptions {
         enableSeparateSubstringMatching?: boolean
     }
     export interface Resolved {
+        /**
+         * Extended options for inputbox
+         */
+        readonly busy: boolean
+        readonly enabled: boolean;
+        readonly step: number | undefined
+        readonly title: string | undefined
+        readonly totalSteps: number | undefined
+        readonly buttons: []
+
         readonly prefix: string;
         readonly placeholder: string;
         readonly ignoreFocusOut: boolean;
@@ -55,9 +66,15 @@ export namespace QuickOpenOptions {
         onClose(canceled: boolean): void;
     }
     export const defaultOptions: Resolved = Object.freeze({
+        busy: false,
+        enabled: true,
+        step: undefined,
+        title: undefined,
+        totalSteps: undefined,
         prefix: '',
         placeholder: '',
         ignoreFocusOut: false,
+        buttons: [],
 
         fuzzyMatchLabel: false,
         fuzzyMatchDetail: false,

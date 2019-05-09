@@ -15,92 +15,34 @@
  ********************************************************************************/
 
 import { inject, injectable } from 'inversify';
-import { QuickOpenService } from './quick-open-service';
-import { QuickOpenItem, QuickOpenMode } from './quick-open-model';
-import { Deferred } from '../../common/promise-util';
-import { MaybePromise } from '../../common/types';
-import { MessageType } from '../../common/message-service-protocol';
-
-export interface QuickInputOptions {
-
-    /**
-     * Show the progress indicator if true
-     */
-    busy?: boolean
-
-    /**
-     * Allow user input
-     */
-    enabled?: boolean;
-
-    /**
-     * Current step count
-     */
-    step?: number | undefined
-
-    /**
-     * The title of the input
-     */
-    title?: string | undefined
-
-    /**
-     * Total number of steps
-     */
-    totalSteps?: number | undefined
-
-    /**
-     * Buttons that are displayed on the title panel
-     */
-    buttons: []
-
-    /**
-     * Text for when there is a problem with the current input value
-     */
-    validationMessage: string | undefined;
-
-    /**
-     * The prefill value.
-     */
-    value?: string;
-
-    /**
-     * The text to display under the input box.
-     */
-    prompt?: string;
-
-    /**
-     * The place holder in the input box to guide the user what to type.
-     */
-    placeHolder?: string;
-
-    /**
-     * Set to `true` to show a password prompt that will not show the typed value.
-     */
-    password?: boolean;
-
-    /**
-     * Set to `true` to keep the input box open when focus moves to another part of the editor or to another window.
-     */
-    ignoreFocusOut?: boolean;
-
-    /**
-     * An optional function that will be called to validate input and to give a hint
-     * to the user.
-     *
-     * @param value The current value of the input box.
-     * @return Return `undefined`, or the empty string when 'value' is valid.
-     */
-    validateInput?(value: string): MaybePromise<string | undefined>;
-}
+import { QuickInputOptions, QuickOpenItem, QuickOpenMode, QuickOpenService } from '@theia/core/lib/browser/quick-open/';
+import { Deferred } from '@theia/core/lib/common/promise-util';
+import { MessageType } from '@theia/core/lib/common/message-service-protocol';
+import { Emitter, Event } from '@theia/core/lib/common/event';
 
 @injectable()
-export class QuickInputService {
+export class QuickInputPluginService {
 
     @inject(QuickOpenService)
     protected readonly quickOpenService: QuickOpenService;
 
+    protected onDidHideEmitter: Emitter<void>;
+    protected onDidAcceptEmitter: Emitter<void>;
+    protected onDidChangeValueEmitter: Emitter<void>;
+
+    onDidHide(): Event<void> {
+        return this.onDidHideEmitter.event;
+    }
+
+    onDidAccept(): Event<void> {
+        return this.onDidAcceptEmitter.event;
+    }
+
+    onDidChangeValue(): Event<void> {
+        return this.onDidChangeValueEmitter.event;
+    }
+
     open(options: QuickInputOptions): Promise<string | undefined> {
-        console.log('is this even being hit');
         const result = new Deferred<string | undefined>();
         const prompt = this.createPrompt(options.prompt);
         let label = prompt;
@@ -108,8 +50,9 @@ export class QuickInputService {
         const validateInput = options && options.validateInput;
         this.quickOpenService.open({
             onType: async (lookFor, acceptor) => {
+                this.onDidChangeValueEmitter.fire();
                 const error = validateInput ? await validateInput(lookFor) : undefined;
-                label = error || prompt;
+                label = (error + ' ' + options.validationMessage) || prompt;
                 if (error) {
                     this.quickOpenService.showDecoration(MessageType.Error);
                 } else {
@@ -120,6 +63,7 @@ export class QuickInputService {
                     run: mode => {
                         if (!error && mode === QuickOpenMode.OPEN) {
                             result.resolve(currentText);
+                            this.onDidAcceptEmitter.fire();
                             return true;
                         }
                         return false;
@@ -131,11 +75,17 @@ export class QuickInputService {
                 prefix: options.value,
                 placeholder: options.placeHolder,
                 password: options.password,
-                ignoreFocusOut: true,
-                title: 'Hello world!!',
-                step: 1,
-                totalSteps: 5,
-                onClose: () => result.resolve(undefined)
+                ignoreFocusOut: options.ignoreFocusOut,
+                title: options.title,
+                step: options.step,
+                totalSteps: options.totalSteps,
+                busy: options.busy,
+                buttons: options.buttons,
+                enabled: options.enabled,
+                onClose: () => {
+                    result.resolve(undefined);
+                    this.onDidHideEmitter.fire();
+                }
             });
         return result.promise;
     }

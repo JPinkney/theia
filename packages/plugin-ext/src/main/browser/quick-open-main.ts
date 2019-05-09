@@ -14,17 +14,17 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { InputBoxOptions } from '@theia/plugin';
+import { InputBoxOptions, InputBox, QuickInputButton } from '@theia/plugin';
 import { interfaces } from 'inversify';
 import { QuickOpenModel, QuickOpenItem, QuickOpenMode } from '@theia/core/lib/browser/quick-open/quick-open-model';
 import { RPCProtocol } from '../../api/rpc-protocol';
 import { QuickOpenExt, QuickOpenMain, MAIN_RPC_CONTEXT, PickOptions, PickOpenItem } from '../../api/plugin-api';
 import { MonacoQuickOpenService } from '@theia/monaco/lib/browser/monaco-quick-open-service';
-import { QuickInputService } from '@theia/core/lib/browser';
+import { QuickInputPluginService } from './quick-input/quick-input-plugin';
 
 export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
 
-    private quickInput: QuickInputService;
+    private quickInput: QuickInputPluginService;
     private doResolve: (value?: number | number[] | PromiseLike<number | number[]> | undefined) => void;
     private proxy: QuickOpenExt;
     private delegate: MonacoQuickOpenService;
@@ -36,7 +36,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
     constructor(rpc: RPCProtocol, container: interfaces.Container) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.QUICK_OPEN_EXT);
         this.delegate = container.get(MonacoQuickOpenService);
-        this.quickInput = container.get(QuickInputService);
+        this.quickInput = container.get(QuickInputPluginService);
     }
 
     private cleanUp() {
@@ -101,6 +101,28 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         }
 
         return this.quickInput.open(options);
+    }
+
+    $createInputBox(inputBox: InputBox): InputBox {
+        throw new Error('Method not implemented.');
+    }
+
+    $setInputBox(busy: boolean,
+        buttons: QuickInputButton[],
+        enabled: boolean,
+        ignoreFocusOut: boolean,
+        password: boolean,
+        placeholder: string | undefined,
+        prompt: string | undefined,
+        step: number | undefined,
+        title: string | undefined,
+        totalSteps: number | undefined,
+        validationMessage: string | undefined,
+        value: string | undefined) {
+
+        this.delegate.setEnabled(enabled);
+        this.delegate.setPassword(password);
+        this.delegate.setPlaceHolder(placeholder);
     }
 
     onType(lookFor: string, acceptor: (items: QuickOpenItem[]) => void): void {

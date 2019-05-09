@@ -26,6 +26,18 @@ import { ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { MonacoContextKeyService } from './monaco-context-key-service';
 
 export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOpenControllerOpts {
+    /**
+     * Extended options for inputbox
+     */
+    readonly busy?: boolean
+    readonly enabled?: boolean;
+    readonly step?: number | undefined
+    readonly title?: string | undefined
+    readonly totalSteps?: number | undefined
+    /**
+     * End of extended options for input box
+     */
+
     readonly prefix?: string;
     readonly password?: boolean;
     readonly ignoreFocusOut?: boolean;
@@ -40,6 +52,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
     protected _widget: monaco.quickOpen.QuickOpenWidget | undefined;
     protected opts: MonacoQuickOpenControllerOpts | undefined;
     protected previousActiveElement: Element | undefined;
+    protected titlePanel: HTMLElement | undefined;
+    protected widgetElement: HTMLElement | undefined;
 
     @inject(MonacoContextKeyService)
     protected readonly contextKeyService: MonacoContextKeyService;
@@ -92,10 +106,36 @@ export class MonacoQuickOpenService extends QuickOpenService {
             this.contextKeyService.activeContext = activeContext instanceof HTMLElement ? activeContext : undefined;
         }
         this.hideDecoration();
+
+        // console.log('Trying to set opts');
+        // if (this.opts && this.widgetElement && !this.titlePanel && (this.opts.title || this.opts.step)) {
+        //     console.log('Opts was set');
+        //     this.titlePanel = this.attachOptionalTitleBar();
+        //     this.widgetElement.appendChild(this.titlePanel);
+        // } else if (this.titlePanel && this.widgetElement) {
+        //     /**
+        //      * If we have the title pane attached to the container element we
+        //      * have to remove it otherwise it will still be there
+        //      */
+        //     if (this.widgetElement.contains(this.titlePanel)) {
+        //         this.widgetElement.removeChild(this.titlePanel);
+        //     }
+        //     this.titlePanel = undefined;
+        // }
+
         this.widget.show(this.opts.prefix || '');
         this.setPlaceHolder(opts.inputAriaLabel);
         this.setPassword(opts.password ? true : false);
         this.inQuickOpenKey.set(true);
+        console.log(this.widget.inputBox);
+        if (this.widget.inputBox) {
+            console.log('Setting input box');
+            const test2 = document.createElement('h3');
+            test2.innerText = 'Test of the element';
+            this.widget.inputBox.inputElement.appendChild(test2);
+            console.log('Appending the child');
+        }
+
     }
 
     setPlaceHolder(placeHolder: string): void {
@@ -128,6 +168,19 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
     }
 
+    setEnabled(isEnabled: boolean) {
+        const widget = this.widget;
+        if (widget.inputBox) {
+            widget.inputBox.inputElement.readOnly = isEnabled;
+        }
+    }
+
+    showProgress(progress: boolean) {
+        if (progress) {
+            console.error('implement progress');
+        }
+    }
+
     protected get widget(): monaco.quickOpen.QuickOpenWidget {
         if (this._widget) {
             return this._widget;
@@ -150,8 +203,71 @@ export class MonacoQuickOpenService extends QuickOpenService {
             onFocusLost: () => (this.opts && this.opts.ignoreFocusOut !== undefined) ? this.opts.ignoreFocusOut : false
         }, {});
         this.attachQuickOpenStyler();
-        this._widget.create();
+        const b = this._widget.create();
+        b.prepend(this.attachOptionalTitleBar());
         return this._widget;
+    }
+
+    private attachOptionalTitleBar() {
+        console.log('Title bar being set');
+        // this.container.style.top = '3%'; // This moves it down so the top style is visible
+
+        // Create a div that contains all the new title top stuff
+        const div = document.createElement('div');
+        div.style.height = '3%'; // Reset the height to be valid
+        div.style.display = 'flex';
+        div.style.textAlign = 'center';
+
+        /**
+         * The stucture of this is
+         * <div> left buttons </div>
+         * <h3> the title etc </h3>
+         * <div> right buttons </div>
+         */
+        const leftButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the left
+        leftButtonDiv.style.display = 'inherit';
+
+        const test = document.createElement('h3');
+        test.innerText = 'test';
+
+        leftButtonDiv.appendChild(test);
+
+        const test2 = document.createElement('h3');
+        test2.innerText = 'test';
+        leftButtonDiv.appendChild(test2);
+
+        const rightButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the right
+        rightButtonDiv.style.position = 'absolute';
+        rightButtonDiv.style.right = '0';
+
+        const test3 = document.createElement('h3');
+        test3.innerText = 'test';
+        rightButtonDiv.appendChild(test3);
+
+        // Create a centered title element
+        const h3 = document.createElement('h3');
+        h3.style.width = '100%';
+        h3.style.position = 'absolute';
+        h3.innerText = 'HELLO WORLD (0/10)';
+
+        // Build the string that is needed for the title
+        // if (this.opts && this.opts.title) {
+        //     h1.title = this.opts.title + ' ';
+        // }
+
+        // if (this.opts && this.opts.step && this.opts.totalSteps) {
+        //     // TODO improve this
+        //     h1.title += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
+        // } else if (this.opts && this.opts.step) {
+        //     h1.title += this.opts.step;
+        // }
+
+        // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
+        h3.style.textAlign = 'center';
+        div.appendChild(leftButtonDiv);
+        div.appendChild(h3);
+        div.appendChild(rightButtonDiv);
+        return div;
     }
 
     protected attachQuickOpenStyler(): void {
@@ -172,6 +288,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
             this.opts.onClose(cancelled);
         }
         this.inQuickOpenKey.set(false);
+        this.onDidHideEmitter.fire();
     }
 
     protected async onType(lookFor: string): Promise<void> {
@@ -202,6 +319,26 @@ export class MonacoQuickOpenControllerOptsImpl implements MonacoQuickOpenControl
         this.model = model;
         this.options = QuickOpenOptions.resolve(options);
         this.password = this.options.password;
+    }
+
+    get busy(): boolean {
+        return this.options.busy;
+    }
+
+    get enabled(): boolean {
+        return this.options.enabled;
+    }
+
+    get step(): number | undefined {
+        return this.options.step;
+    }
+
+    get title(): string | undefined {
+        return this.options.title;
+    }
+
+    get totalSteps(): number | undefined {
+        return this.options.totalSteps;
     }
 
     get prefix(): string {

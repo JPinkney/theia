@@ -98,7 +98,8 @@ import {
     ColorPresentation,
     OperatingSystem,
     WebviewPanelTargetArea,
-    FileSystemError
+    FileSystemError,
+    QuickInputButtons
 } from './types-impl';
 import { SymbolKind } from '../api/model';
 import { EditorsAndDocumentsExtImpl } from './editors-and-documents';
@@ -295,6 +296,10 @@ export function createAPIFactory(
                 } else {
                     return quickOpenExt.showInput(options);
                 }
+            },
+            createInputBox() {
+                console.log(quickOpenExt.createInputBox());
+                return quickOpenExt.createInputBox();
             },
             createStatusBarItem(alignment?: theia.StatusBarAlignment, priority?: number): theia.StatusBarItem {
                 return statusBarMessageRegistryExt.createStatusBarItem(alignment, priority);
@@ -721,7 +726,8 @@ export function createAPIFactory(
             FoldingRangeKind,
             OperatingSystem,
             WebviewPanelTargetArea,
-            FileSystemError
+            FileSystemError,
+            QuickInputButtons
         };
     };
 }

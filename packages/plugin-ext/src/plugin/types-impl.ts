@@ -1899,3 +1899,18 @@ export enum WebviewPanelTargetArea {
     Right = 'right',
     Bottom = 'bottom'
 }
+
+/**
+ * Predefined buttons for [QuickPick](#QuickPick) and [InputBox](#InputBox).
+ */
+export class QuickInputButtons {
+
+    /**
+     * A back button for [QuickPick](#QuickPick) and [InputBox](#InputBox).
+     *
+     * When a navigation 'back' button is needed this one should be used for consistency.
+     * It comes with a predefined icon, tooltip and location.
+     */
+    static readonly Back: theia.QuickInputButton;
+    private constructor() {}
+}

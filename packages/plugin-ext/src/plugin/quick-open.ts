@@ -14,11 +14,12 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 import { QuickOpenExt, PLUGIN_RPC_CONTEXT as Ext, QuickOpenMain, PickOpenItem } from '../api/plugin-api';
-import { QuickPickOptions, QuickPickItem, InputBoxOptions } from '@theia/plugin';
+import { QuickPickOptions, QuickPickItem, InputBoxOptions, InputBox } from '@theia/plugin';
 import { CancellationToken } from '@theia/core/lib/common/cancellation';
 import { RPCProtocol } from '../api/rpc-protocol';
 import { anyPromise } from '../api/async-util';
 import { hookCancellationToken } from '../api/async-util';
+import { InputBoxExt } from './quick-input/input-box-ext';
 
 export type Item = string | QuickPickItem;
 
@@ -120,6 +121,13 @@ export class QuickOpenExtImpl implements QuickOpenExt {
 
         const promise = this.proxy.$input(options, typeof this.validateInputHandler === 'function');
         return hookCancellationToken(token, promise);
+    }
+
+    createInputBox(): InputBox {
+        /**
+         * Created on the backend otherwise we wouldn't be able to hook up the emitters
+         */
+        return new InputBoxExt(this.proxy);
     }
 
 }

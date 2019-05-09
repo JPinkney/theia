@@ -58,7 +58,7 @@ import {
 } from './model';
 import { ExtPluginApi } from '../common/plugin-ext-api-contribution';
 import { KeysToAnyValues, KeysToKeysToAnyValue } from '../common/types';
-import { CancellationToken, Progress, ProgressOptions } from '@theia/plugin';
+import { CancellationToken, Progress, ProgressOptions, InputBox } from '@theia/plugin';
 import { IJSONSchema, IJSONSchemaSnippet } from '@theia/core/lib/common/json-schema';
 import { DebuggerDescription } from '@theia/debug/lib/common/debug-service';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -374,6 +374,21 @@ export interface QuickOpenMain {
     $setItems(items: PickOpenItem[]): Promise<any>;
     $setError(error: Error): Promise<any>;
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
+    $createInputBox(inputBox: InputBox): InputBox; // Creates InputBox on the backend with settings provided
+    $setInputBox(
+        busy: boolean,
+        buttons: ReadonlyArray<theia.QuickInputButton>,
+        enabled: boolean,
+        ignoreFocusOut: boolean,
+        password: boolean,
+        placeholder: string | undefined,
+        prompt: string | undefined,
+        step: number | undefined,
+        title: string | undefined,
+        totalSteps: number | undefined,
+        validationMessage: string | undefined,
+        value: string | undefined
+        );
 }
 
 export interface WorkspaceMain {

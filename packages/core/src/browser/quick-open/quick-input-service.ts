@@ -51,12 +51,12 @@ export interface QuickInputOptions {
     /**
      * Buttons that are displayed on the title panel
      */
-    buttons: []
+    buttons?: []
 
     /**
      * Text for when there is a problem with the current input value
      */
-    validationMessage: string | undefined;
+    validationMessage?: string | undefined;
 
     /**
      * The prefill value.

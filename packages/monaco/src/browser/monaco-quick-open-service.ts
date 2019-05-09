@@ -127,14 +127,14 @@ export class MonacoQuickOpenService extends QuickOpenService {
         this.setPlaceHolder(opts.inputAriaLabel);
         this.setPassword(opts.password ? true : false);
         this.inQuickOpenKey.set(true);
-        console.log(this.widget.inputBox);
-        if (this.widget.inputBox) {
-            console.log('Setting input box');
-            const test2 = document.createElement('h3');
-            test2.innerText = 'Test of the element';
-            this.widget.inputBox.inputElement.appendChild(test2);
-            console.log('Appending the child');
-        }
+        // console.log(this.widget.inputBox);
+        // if (this.widget.inputBox) {
+        //     console.log('Setting input box');
+        //     const test2 = document.createElement('h3');
+        //     test2.innerText = 'Test of the element';
+        //     this.widget.inputBox.inputElement.appendChild(test2);
+        //     console.log('Appending the child');
+        // }
 
     }
 
@@ -288,7 +288,6 @@ export class MonacoQuickOpenService extends QuickOpenService {
             this.opts.onClose(cancelled);
         }
         this.inQuickOpenKey.set(false);
-        this.onDidHideEmitter.fire();
     }
 
     protected async onType(lookFor: string): Promise<void> {

@@ -103,8 +103,25 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         return this.quickInput.open(options);
     }
 
-    $createInputBox(inputBox: InputBox): InputBox {
-        throw new Error('Method not implemented.');
+    // tslint:disable-next-line:no-any
+    $showInputBox(inputBox: InputBox): { onDidAccept: any } {
+        // TODO: Add in buttons. Rn it has incompatible types
+        // TODO: Add in placeholder
+        // TODO: Add in prefix
+        this.quickInput.open({
+            busy: inputBox.busy,
+            enabled: inputBox.enabled,
+            ignoreFocusOut: inputBox.ignoreFocusOut,
+            password: inputBox.password,
+            step: inputBox.step,
+            title: inputBox.title,
+            totalSteps: inputBox.totalSteps,
+            buttons: [],
+            validationMessage: ''
+        });
+        return {
+            onDidAccept: this.quickInput.onDidAccept
+        };
     }
 
     $setInputBox(busy: boolean,
@@ -112,7 +129,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         enabled: boolean,
         ignoreFocusOut: boolean,
         password: boolean,
-        placeholder: string | undefined,
+        placeholder: string,
         prompt: string | undefined,
         step: number | undefined,
         title: string | undefined,

@@ -26,7 +26,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     private _password: boolean;
     private _placeholder: string | undefined;
     private _prompt: string | undefined;
-    private _step: number | undefined;
     private _validationMessage: string | undefined;
     private _value: string;
 
@@ -42,15 +41,12 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     constructor(proxy: QuickOpenMain) {
         super();
         this.proxy = proxy;
-        this.buttons = [];
-        this.password = false;
-        this.placeholder = '';
-        this.prompt = '';
-        this.step = 0;
-        this.title = '';
-        this.totalSteps = 0;
-        this.validationMessage = '';
-        this.value = '';
+        this._buttons = [];
+        this._password = false;
+        this._placeholder = '';
+        this._prompt = '';
+        this._validationMessage = '';
+        this._value = '';
     }
 
     get onDidAccept(): Event<void> {
@@ -101,15 +97,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         this.update();
     }
 
-    get step(): number | undefined {
-        return this._step;
-    }
-
-    set step(step: number | undefined) {
-        this._step = step;
-        this.update();
-    }
-
     get validationMessage(): string | undefined {
         return this._validationMessage;
     }
@@ -124,7 +111,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     }
 
     set value(value: string) {
-        this.value = value;
+        this._value = value;
         this.update();
     }
 
@@ -159,5 +146,9 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     show(): void {
         // Call across the proxy
+        this.isVisible = true;
+        this.proxy.$showInputBox(this);
+        console.log('Trying onDidAccept');
+        // console.log(b.onDidAccept());
     }
 }

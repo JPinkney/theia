@@ -62,6 +62,7 @@ import { SelectionProviderCommandContribution } from './selection-provider-comma
 import { ViewColumnService } from './view-column-service';
 import { TreeViewActions } from './view/tree-view-actions';
 import { TreeViewContextKeyService } from './view/tree-view-context-key-service';
+import { QuickInputPluginService } from './quick-input/quick-input-plugin';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bindHostedPluginPreferences(bind);
@@ -87,6 +88,10 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
     bind(UntitledResourceResolver).toSelf().inSingletonScope();
     bind(ResourceResolver).toService(UntitledResourceResolver);
+
+    // TEST
+    bind(QuickInputPluginService).toSelf().inSingletonScope();
+    // END TEST
 
     bind(FrontendApplicationContribution).toDynamicValue(ctx => ({
         onStart(app: FrontendApplication): MaybePromise<void> {

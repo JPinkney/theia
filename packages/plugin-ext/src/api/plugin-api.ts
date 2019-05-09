@@ -374,7 +374,7 @@ export interface QuickOpenMain {
     $setItems(items: PickOpenItem[]): Promise<any>;
     $setError(error: Error): Promise<any>;
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
-    $createInputBox(inputBox: InputBox): InputBox; // Creates InputBox on the backend with settings provided
+    $showInputBox(inputBox: InputBox): { onDidAccept: any };
     $setInputBox(
         busy: boolean,
         buttons: ReadonlyArray<theia.QuickInputButton>,
@@ -388,7 +388,7 @@ export interface QuickOpenMain {
         totalSteps: number | undefined,
         validationMessage: string | undefined,
         value: string | undefined
-        );
+        ): void;
 }
 
 export interface WorkspaceMain {

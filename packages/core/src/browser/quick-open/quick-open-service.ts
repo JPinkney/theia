@@ -17,7 +17,6 @@
 import { injectable } from 'inversify';
 import { QuickOpenModel } from './quick-open-model';
 import { MessageType } from '../../common/message-service-protocol';
-import { Event, Emitter } from '../../common/event';
 
 export type QuickOpenOptions = Partial<QuickOpenOptions.Resolved>;
 export namespace QuickOpenOptions {
@@ -36,7 +35,7 @@ export namespace QuickOpenOptions {
         readonly step: number | undefined
         readonly title: string | undefined
         readonly totalSteps: number | undefined
-        readonly buttons: []
+        // readonly buttons: Array<>
 
         readonly prefix: string;
         readonly placeholder: string;
@@ -74,7 +73,7 @@ export namespace QuickOpenOptions {
         prefix: '',
         placeholder: '',
         ignoreFocusOut: false,
-        buttons: [],
+        // buttons: [],
 
         fuzzyMatchLabel: false,
         fuzzyMatchDetail: false,

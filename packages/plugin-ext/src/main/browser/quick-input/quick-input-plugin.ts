@@ -30,6 +30,12 @@ export class QuickInputPluginService {
     protected onDidAcceptEmitter: Emitter<void>;
     protected onDidChangeValueEmitter: Emitter<void>;
 
+    constructor() {
+        this.onDidHideEmitter = new Emitter();
+        this.onDidAcceptEmitter = new Emitter();
+        this.onDidChangeValueEmitter = new Emitter();
+    }
+
     onDidHide(): Event<void> {
         return this.onDidHideEmitter.event;
     }
@@ -50,9 +56,10 @@ export class QuickInputPluginService {
         const validateInput = options && options.validateInput;
         this.quickOpenService.open({
             onType: async (lookFor, acceptor) => {
-                this.onDidChangeValueEmitter.fire();
+                this.onDidChangeValueEmitter.fire(undefined);
                 const error = validateInput ? await validateInput(lookFor) : undefined;
-                label = (error + ' ' + options.validationMessage) || prompt;
+                label = error || prompt;
+                console.log('Label is: ' + label);
                 if (error) {
                     this.quickOpenService.showDecoration(MessageType.Error);
                 } else {
@@ -63,7 +70,7 @@ export class QuickInputPluginService {
                     run: mode => {
                         if (!error && mode === QuickOpenMode.OPEN) {
                             result.resolve(currentText);
-                            this.onDidAcceptEmitter.fire();
+                            this.onDidAcceptEmitter.fire(undefined);
                             return true;
                         }
                         return false;
@@ -80,11 +87,10 @@ export class QuickInputPluginService {
                 step: options.step,
                 totalSteps: options.totalSteps,
                 busy: options.busy,
-                buttons: options.buttons,
                 enabled: options.enabled,
                 onClose: () => {
                     result.resolve(undefined);
-                    this.onDidHideEmitter.fire();
+                    this.onDidHideEmitter.fire(undefined);
                 }
             });
         return result.promise;

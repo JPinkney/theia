@@ -34,6 +34,9 @@ export class QuickInputExt implements QuickInput {
         this._busy = false;
         this._enabled = true;
         this._ignoreFocusOut = false;
+        this._step = 0;
+        this._title = '';
+        this._totalSteps = 0;
 
         this.disposableCollection = new DisposableCollection();
         this.disposableCollection.push(this.onDidHideEmitter = new Emitter());

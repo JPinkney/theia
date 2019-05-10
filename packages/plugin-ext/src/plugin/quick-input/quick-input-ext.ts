@@ -17,6 +17,7 @@
 import { Emitter, Event } from '@theia/core/lib/common/event';
 import { QuickInput } from '@theia/plugin';
 import { DisposableCollection } from '@theia/core/lib/common/disposable';
+import { QuickOpenExtImpl } from '../quick-open';
 
 export class QuickInputExt implements QuickInput {
 
@@ -30,7 +31,7 @@ export class QuickInputExt implements QuickInput {
     private readonly onDidHideEmitter: Emitter<void>;
 
     private disposableCollection: DisposableCollection;
-    constructor() {
+    constructor(quickOpenExt: QuickOpenExtImpl) {
         this._busy = false;
         this._enabled = true;
         this._ignoreFocusOut = false;
@@ -40,6 +41,9 @@ export class QuickInputExt implements QuickInput {
 
         this.disposableCollection = new DisposableCollection();
         this.disposableCollection.push(this.onDidHideEmitter = new Emitter());
+        quickOpenExt.onDidHide(() => {
+            this.onDidHideEmitter.fire(undefined);
+        });
     }
 
     get title(): string | undefined {

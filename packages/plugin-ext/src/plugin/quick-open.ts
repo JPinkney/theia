@@ -14,22 +14,34 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 import { QuickOpenExt, PLUGIN_RPC_CONTEXT as Ext, QuickOpenMain, PickOpenItem } from '../api/plugin-api';
-import { QuickPickOptions, QuickPickItem, InputBoxOptions, InputBox } from '@theia/plugin';
+import { QuickPickOptions, QuickPickItem, InputBoxOptions, InputBox, QuickInputButton } from '@theia/plugin';
 import { CancellationToken } from '@theia/core/lib/common/cancellation';
 import { RPCProtocol } from '../api/rpc-protocol';
 import { anyPromise } from '../api/async-util';
 import { hookCancellationToken } from '../api/async-util';
 import { InputBoxExt } from './quick-input/input-box-ext';
+import { Emitter, Event } from '@theia/core/lib/common/event';
 
 export type Item = string | QuickPickItem;
 
 export class QuickOpenExtImpl implements QuickOpenExt {
+
     private proxy: QuickOpenMain;
     private selectItemHandler: undefined | ((handle: number) => void);
     private validateInputHandler: undefined | ((input: string) => string | PromiseLike<string | undefined> | undefined);
 
+    private readonly onDidChangeValueEmitter: Emitter<string>;
+    private readonly onDidAcceptEmitter: Emitter<void>;
+    private readonly onDidHideEmitter: Emitter<void>;
+    private readonly onDidTriggerButtonEmitter: Emitter<QuickInputButton>;
+
     constructor(rpc: RPCProtocol) {
         this.proxy = rpc.getProxy(Ext.QUICK_OPEN_MAIN);
+
+        this.onDidAcceptEmitter = new Emitter<void>();
+        this.onDidChangeValueEmitter = new Emitter<string>();
+        this.onDidHideEmitter = new Emitter<void>();
+        this.onDidTriggerButtonEmitter = new Emitter<QuickInputButton>();
     }
     $onItemSelected(handle: number): void {
         if (this.selectItemHandler) {
@@ -127,7 +139,39 @@ export class QuickOpenExtImpl implements QuickOpenExt {
         /**
          * Created on the backend otherwise we wouldn't be able to hook up the emitters
          */
-        return new InputBoxExt(this.proxy);
+        return new InputBoxExt(this.proxy, this);
+    }
+
+    $onDidAccept(): void {
+        this.onDidAcceptEmitter.fire(undefined);
+    }
+
+    get onDidAccept(): Event<void> {
+        return this.onDidAcceptEmitter.event;
+    }
+
+    $onDidChangeValue(changed: string): void {
+        this.onDidChangeValueEmitter.fire(changed);
+    }
+
+    get onDidChangeValue(): Event<string> {
+        return this.onDidChangeValueEmitter.event;
+    }
+
+    $onDidHide(): void {
+        this.onDidHideEmitter.fire(undefined);
+    }
+
+    get onDidHide(): Event<void> {
+        return this.onDidHideEmitter.event;
+    }
+
+    $onDidTriggerButton(quickInputButton: QuickInputButton): void {
+        this.onDidTriggerButtonEmitter.fire(quickInputButton);
+    }
+
+    get onDidTriggerButton(): Event<QuickInputButton> {
+        return this.onDidTriggerButtonEmitter.event;
     }
 
 }

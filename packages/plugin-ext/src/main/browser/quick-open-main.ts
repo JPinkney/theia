@@ -21,6 +21,7 @@ import { RPCProtocol } from '../../api/rpc-protocol';
 import { QuickOpenExt, QuickOpenMain, MAIN_RPC_CONTEXT, PickOptions, PickOpenItem } from '../../api/plugin-api';
 import { MonacoQuickOpenService } from '@theia/monaco/lib/browser/monaco-quick-open-service';
 import { QuickInputPluginService } from './quick-input/quick-input-plugin';
+// import { Event } from '@theia/core/lib/common';
 
 export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
 
@@ -104,7 +105,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
     }
 
     // tslint:disable-next-line:no-any
-    $showInputBox(inputBox: InputBox): { onDidAccept: any } {
+    $showInputBox(inputBox: InputBox): void {
         // TODO: Add in buttons. Rn it has incompatible types
         // TODO: Add in placeholder
         // TODO: Add in prefix
@@ -119,9 +120,23 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
             buttons: [],
             validationMessage: ''
         });
-        return {
-            onDidAccept: this.quickInput.onDidAccept
-        };
+        this.delegate.onDidTriggerButton(b => {
+            console.log('a button has been triggered');
+            this.proxy.$onDidTriggerButton(b);
+        });
+        console.log('On did accept is: ');
+        this.quickInput.onDidAccept(() => {
+            console.log('just hit onDidAccept on the backend');
+            this.proxy.$onDidAccept();
+        });
+        this.quickInput.onDidChangeValue(changedValue => {
+            console.log('just hit onDidChangeValue on the backend');
+            this.proxy.$onDidChangeValue(changedValue);
+        });
+        this.quickInput.onDidHide(() => {
+            console.log('just hit onDidHide on the backend');
+            this.proxy.$onDidHide();
+        });
     }
 
     $setInputBox(busy: boolean,

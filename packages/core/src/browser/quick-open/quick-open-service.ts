@@ -17,6 +17,17 @@
 import { injectable } from 'inversify';
 import { QuickOpenModel } from './quick-open-model';
 import { MessageType } from '../../common/message-service-protocol';
+import URI from '../../common/uri';
+
+enum Location {
+    left = 0,
+    right = 1
+}
+export interface TitleButton {
+    location: Location;
+    iconPath: URI | { dark: URI, light: URI } | { id: string };
+    tooltip?: string | undefined;
+}
 
 export type QuickOpenOptions = Partial<QuickOpenOptions.Resolved>;
 export namespace QuickOpenOptions {
@@ -35,7 +46,7 @@ export namespace QuickOpenOptions {
         readonly step: number | undefined
         readonly title: string | undefined
         readonly totalSteps: number | undefined
-        // readonly buttons: Array<>
+        readonly buttons: ReadonlyArray<TitleButton>
 
         readonly prefix: string;
         readonly placeholder: string;
@@ -73,7 +84,7 @@ export namespace QuickOpenOptions {
         prefix: '',
         placeholder: '',
         ignoreFocusOut: false,
-        // buttons: [],
+        buttons: [],
 
         fuzzyMatchLabel: false,
         fuzzyMatchDetail: false,

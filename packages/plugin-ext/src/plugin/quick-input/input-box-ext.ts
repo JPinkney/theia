@@ -19,6 +19,7 @@ import { QuickInputExt } from './quick-input-ext';
 import { Emitter, Event } from '@theia/core/lib/common/event';
 
 import { QuickOpenMain } from '../../common';
+import { QuickOpenExtImpl } from '../quick-open';
 
 export class InputBoxExt extends QuickInputExt implements InputBox {
 
@@ -38,8 +39,8 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     private isVisible: boolean;
 
     // TODO: Replace with custom implementation ??
-    constructor(proxy: QuickOpenMain) {
-        super();
+    constructor(proxy: QuickOpenMain, quickOpenExt: QuickOpenExtImpl) {
+        super(quickOpenExt);
         this.proxy = proxy;
         this._buttons = [];
         this._password = false;
@@ -47,6 +48,20 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         this._prompt = '';
         this._validationMessage = '';
         this._value = '';
+        this.onDidChangeValueEmitter = new Emitter<string>();
+        this.onDidAcceptEmitter = new Emitter<void>();
+        this.onDidTriggerButtonEmitter = new Emitter<QuickInputButton>();
+
+        quickOpenExt.onDidChangeValue(changedValue => {
+            this.onDidChangeValueEmitter.fire(changedValue);
+        });
+        quickOpenExt.onDidAccept(() => {
+            this.onDidAcceptEmitter.fire(undefined);
+        });
+        quickOpenExt.onDidTriggerButton(quickInputButton => {
+            console.log('triggered button in input-box-ext.ts');
+            this.onDidTriggerButtonEmitter.fire(quickInputButton);
+        });
     }
 
     get onDidAccept(): Event<void> {
@@ -148,7 +163,5 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         // Call across the proxy
         this.isVisible = true;
         this.proxy.$showInputBox(this);
-        console.log('Trying onDidAccept');
-        // console.log(b.onDidAccept());
     }
 }

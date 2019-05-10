@@ -28,23 +28,24 @@ export class QuickInputPluginService {
 
     protected onDidHideEmitter: Emitter<void>;
     protected onDidAcceptEmitter: Emitter<void>;
-    protected onDidChangeValueEmitter: Emitter<void>;
+    protected onDidChangeValueEmitter: Emitter<string>;
 
     constructor() {
+        // TODO: do the disposable stuff
         this.onDidHideEmitter = new Emitter();
         this.onDidAcceptEmitter = new Emitter();
         this.onDidChangeValueEmitter = new Emitter();
     }
 
-    onDidHide(): Event<void> {
+    get onDidHide(): Event<void> {
         return this.onDidHideEmitter.event;
     }
 
-    onDidAccept(): Event<void> {
+    get onDidAccept(): Event<void> {
         return this.onDidAcceptEmitter.event;
     }
 
-    onDidChangeValue(): Event<void> {
+    get onDidChangeValue(): Event<string> {
         return this.onDidChangeValueEmitter.event;
     }
 
@@ -56,10 +57,9 @@ export class QuickInputPluginService {
         const validateInput = options && options.validateInput;
         this.quickOpenService.open({
             onType: async (lookFor, acceptor) => {
-                this.onDidChangeValueEmitter.fire(undefined);
+                this.onDidChangeValueEmitter.fire(lookFor);
                 const error = validateInput ? await validateInput(lookFor) : undefined;
                 label = error || prompt;
-                console.log('Label is: ' + label);
                 if (error) {
                     this.quickOpenService.showDecoration(MessageType.Error);
                 } else {
@@ -82,7 +82,7 @@ export class QuickInputPluginService {
                 prefix: options.value,
                 placeholder: options.placeHolder,
                 password: options.password,
-                ignoreFocusOut: options.ignoreFocusOut,
+                ignoreFocusOut: true,
                 title: options.title,
                 step: options.step,
                 totalSteps: options.totalSteps,

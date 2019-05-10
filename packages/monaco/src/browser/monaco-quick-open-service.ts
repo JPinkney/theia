@@ -19,11 +19,12 @@ import { MessageType } from '@theia/core/lib/common/message-service-protocol';
 import {
     QuickOpenService, QuickOpenModel, QuickOpenOptions, QuickOpenItem, QuickOpenGroupItem,
     QuickOpenMode, KeySequence, QuickOpenActionProvider, QuickOpenAction, ResolvedKeybinding,
-    KeyCode, Key, KeybindingRegistry
+    KeyCode, Key, KeybindingRegistry, TitleButton
 } from '@theia/core/lib/browser';
 import { KEY_CODE_MAP } from './monaco-keycode-map';
 import { ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { MonacoContextKeyService } from './monaco-context-key-service';
+import { Emitter, Event } from '@theia/core/lib/common/event';
 
 export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOpenControllerOpts {
     /**
@@ -34,6 +35,7 @@ export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOp
     readonly step?: number | undefined
     readonly title?: string | undefined
     readonly totalSteps?: number | undefined
+    readonly buttons?: ReadonlyArray<TitleButton>
     /**
      * End of extended options for input box
      */
@@ -63,8 +65,13 @@ export class MonacoQuickOpenService extends QuickOpenService {
 
     protected inQuickOpenKey: ContextKey<boolean>;
 
+    private readonly onDidTriggerButtonEmitter: Emitter<TitleButton>;
+
     constructor() {
         super();
+
+        this.onDidTriggerButtonEmitter = new Emitter<TitleButton>();
+
         const overlayWidgets = document.createElement('div');
         overlayWidgets.classList.add('quick-open-overlay');
         document.body.appendChild(overlayWidgets);
@@ -132,7 +139,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
         //     console.log('Setting input box');
         //     const test2 = document.createElement('h3');
         //     test2.innerText = 'Test of the element';
-        //     this.widget.inputBox.inputElement.appendChild(test2);
+        //     test2.style.display = 'flex';
+        //     this.widget.inputBox
         //     console.log('Appending the child');
         // }
 
@@ -205,6 +213,10 @@ export class MonacoQuickOpenService extends QuickOpenService {
         this.attachQuickOpenStyler();
         const b = this._widget.create();
         b.prepend(this.attachOptionalTitleBar());
+        const test2 = document.createElement('h3');
+        test2.innerText = 'Test of the element';
+        test2.style.display = 'flex';
+        b.append(test2);
         return this._widget;
     }
 
@@ -227,14 +239,9 @@ export class MonacoQuickOpenService extends QuickOpenService {
         const leftButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the left
         leftButtonDiv.style.display = 'inherit';
 
-        const test = document.createElement('h3');
-        test.innerText = 'test';
-
-        leftButtonDiv.appendChild(test);
-
-        const test2 = document.createElement('h3');
-        test2.innerText = 'test';
-        leftButtonDiv.appendChild(test2);
+        const test1 = document.createElement('h3');
+        test1.innerText = 'test';
+        leftButtonDiv.appendChild(test1);
 
         const rightButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the right
         rightButtonDiv.style.position = 'absolute';
@@ -262,12 +269,43 @@ export class MonacoQuickOpenService extends QuickOpenService {
         //     h1.title += this.opts.step;
         // }
 
+        const newButtons = this.createButtons();
+        newButtons.forEach(element => {
+            leftButtonDiv.appendChild(element);
+        });
+
         // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
         h3.style.textAlign = 'center';
         div.appendChild(leftButtonDiv);
         div.appendChild(h3);
         div.appendChild(rightButtonDiv);
         return div;
+    }
+
+    private createButtons() {
+        const d = [];
+        if (this.opts && this.opts.buttons) {
+            for (const b of this.opts.buttons) {
+                d.push(this.createButton(b));
+            }
+        }
+        return d;
+    }
+
+    private createButton(button: TitleButton) {
+        // Do some button stuff
+        console.log(button);
+        const aTag = document.createElement('a');
+        aTag.title = button.tooltip ? button.tooltip : '';
+        aTag.onclick = () => {
+            console.log('Button has been clicked');
+            this.onDidTriggerButtonEmitter.fire(button);
+        };
+        return aTag;
+    }
+
+    get onDidTriggerButton(): Event<TitleButton> {
+        return this.onDidTriggerButtonEmitter.event;
     }
 
     protected attachQuickOpenStyler(): void {
@@ -350,6 +388,10 @@ export class MonacoQuickOpenControllerOptsImpl implements MonacoQuickOpenControl
 
     get inputAriaLabel(): string {
         return this.options.placeholder || '';
+    }
+
+    get buttons() {
+        return this.options.buttons || [];
     }
 
     onClose(cancelled: boolean): void {

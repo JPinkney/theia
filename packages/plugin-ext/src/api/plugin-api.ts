@@ -17,6 +17,7 @@
 /* tslint:disable:no-any */
 
 import { createProxyIdentifier, ProxyIdentifier } from './rpc-protocol';
+// import { Event } from '@theia/core/lib/common/event';
 import * as theia from '@theia/plugin';
 import { PluginLifecycle, PluginModel, PluginMetadata, PluginPackage, IconUrl } from '../common/plugin-protocol';
 import { QueryParameters } from '../common/env';
@@ -283,6 +284,11 @@ export interface StatusBarMessageRegistryMain {
 export interface QuickOpenExt {
     $onItemSelected(handle: number): void;
     $validateInput(input: string): PromiseLike<string | undefined> | undefined;
+
+    $onDidAccept(): void;
+    $onDidChangeValue(changed: string): void;
+    $onDidHide(): void;
+    $onDidTriggerButton(quickInputButton: theia.QuickInputButton): void;
 }
 
 /**
@@ -374,7 +380,7 @@ export interface QuickOpenMain {
     $setItems(items: PickOpenItem[]): Promise<any>;
     $setError(error: Error): Promise<any>;
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
-    $showInputBox(inputBox: InputBox): { onDidAccept: any };
+    $showInputBox(inputBox: InputBox): void;
     $setInputBox(
         busy: boolean,
         buttons: ReadonlyArray<theia.QuickInputButton>,

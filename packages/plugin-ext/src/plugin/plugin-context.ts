@@ -298,7 +298,6 @@ export function createAPIFactory(
                 }
             },
             createInputBox() {
-                console.log(quickOpenExt.createInputBox());
                 return quickOpenExt.createInputBox();
             },
             createStatusBarItem(alignment?: theia.StatusBarAlignment, priority?: number): theia.StatusBarItem {

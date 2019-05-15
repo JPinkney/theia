@@ -55,6 +55,8 @@ export class QuickInputPluginService {
         let label = prompt;
         let currentText = '';
         const validateInput = options && options.validateInput;
+        console.log('Quick-input-plugin');
+        console.log(options);
         this.quickOpenService.open({
             onType: async (lookFor, acceptor) => {
                 this.onDidChangeValueEmitter.fire(lookFor);

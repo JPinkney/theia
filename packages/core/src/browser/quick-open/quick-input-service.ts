@@ -100,7 +100,6 @@ export class QuickInputService {
     protected readonly quickOpenService: QuickOpenService;
 
     open(options: QuickInputOptions): Promise<string | undefined> {
-        console.log('is this even being hit');
         const result = new Deferred<string | undefined>();
         const prompt = this.createPrompt(options.prompt);
         let label = prompt;

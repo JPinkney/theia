@@ -38,7 +38,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     private isVisible: boolean;
 
-    // TODO: Replace with custom implementation ??
+    // TODO: Replace with disposable emitters
     constructor(proxy: QuickOpenMain, quickOpenExt: QuickOpenExtImpl) {
         super(quickOpenExt);
         this.proxy = proxy;
@@ -59,7 +59,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
             this.onDidAcceptEmitter.fire(undefined);
         });
         quickOpenExt.onDidTriggerButton(quickInputButton => {
-            console.log('triggered button in input-box-ext.ts');
             this.onDidTriggerButtonEmitter.fire(quickInputButton);
         });
     }
@@ -137,7 +136,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         if (!this.isVisible) {
             return;
         }
-        console.log('sending the updated parameters to the backend');
         this.proxy.$setInputBox(
             this.busy,
             this.buttons,
@@ -162,6 +160,28 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     show(): void {
         // Call across the proxy
         this.isVisible = true;
-        this.proxy.$showInputBox(this);
+
+        /**
+         * This is sent as a serialized object because
+         * we need access to the getters and setters to know when
+         * to update the InputBox on the client side but this isn't possible via
+         * sending the InputBox through because it does not preserve the getters/setters
+         * which makes the object properties inaccessible
+         */
+        const inputBoxSettings = {
+            busy: this.busy,
+            buttons: this.buttons,
+            enabled: this.enabled,
+            ignoreFocusOut: this.ignoreFocusOut,
+            password: this.password,
+            placeholder: this.placeholder,
+            prompt: this.prompt,
+            step: this.step,
+            title: this.title,
+            totalSteps: this.totalSteps,
+            validationMessage: this.validationMessage,
+            value: this.value
+        } as InputBox;
+        this.proxy.$showInputBox(inputBoxSettings);
     }
 }

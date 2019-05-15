@@ -79,10 +79,13 @@ export class QuickInputExt implements QuickInput {
     }
 
     get busy(): boolean {
+        console.log('i Have hit busy');
+        console.log(this._busy);
         return this._busy;
     }
 
     set busy(busy: boolean) {
+        console.log('wtf');
         this._busy = busy;
     }
 

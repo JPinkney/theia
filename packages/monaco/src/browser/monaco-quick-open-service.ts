@@ -30,12 +30,12 @@ export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOp
     /**
      * Extended options for inputbox
      */
-    readonly busy?: boolean
-    readonly enabled?: boolean;
-    readonly step?: number | undefined
-    readonly title?: string | undefined
-    readonly totalSteps?: number | undefined
-    readonly buttons?: ReadonlyArray<TitleButton>
+    busy?: boolean
+    enabled?: boolean;
+    step?: number | undefined
+    title?: string | undefined
+    totalSteps?: number | undefined
+    buttons?: ReadonlyArray<TitleButton>
     /**
      * End of extended options for input box
      */
@@ -47,6 +47,135 @@ export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOp
     onClose?(canceled: boolean): void;
 }
 
+/**
+ * IDEA: What if we had a monaco title bar class that we basically stored
+ * at the top of the menu and then we can check if it contains MonacoTitleBar to
+ * see if it contains it.
+ *
+ * Then we can modify the element automatically and it should pick it up?
+ * I don't think it needs a re-render or whatever
+ */
+export class MonacoTitleBar {
+
+    private _container: HTMLElement;
+    private _opts: MonacoQuickOpenControllerOpts;
+    private _isAttached: boolean;
+
+    /*
+     * The idea is that changing the options changes the actual element
+     */
+    private titleElement: HTMLElement;
+    // private buttons: HTMLElement;
+
+    constructor() {
+        this._container = document.createElement('div');
+        this.titleElement = document.createElement('h1');
+        // this.buttons = document.createElement('div'); // Unknown for now
+    }
+
+    get isAttached(): boolean {
+        return this._isAttached;
+    }
+
+    set isAttached(isAttached: boolean) {
+        this._isAttached = isAttached;
+    }
+
+    set opts(options: MonacoQuickOpenControllerOpts) {
+        this._opts = options;
+    }
+
+    get opts() {
+        return this._opts;
+    }
+
+    /**
+     * Add the title bar impl to the container
+     */
+    public attachTitleBar() {
+        // Create a div that contains all the new title top stuff
+        const div = document.createElement('div');
+        div.style.height = '3%'; // Reset the height to be valid
+        div.style.display = 'flex';
+        div.style.textAlign = 'center';
+
+        /**
+         * The stucture of this is
+         * <div> left buttons </div>
+         * <h3> the title etc </h3>
+         * <div> right buttons </div>
+         */
+        const leftButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the left
+        leftButtonDiv.style.display = 'inherit';
+
+        const test1 = document.createElement('h3');
+        test1.innerText = 'test';
+        leftButtonDiv.appendChild(test1);
+
+        const rightButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the right
+        rightButtonDiv.style.position = 'absolute';
+        rightButtonDiv.style.right = '0';
+
+        const test3 = document.createElement('h3');
+        test3.innerText = 'test';
+        rightButtonDiv.appendChild(test3);
+
+        // Create a centered title element
+        const h3 = document.createElement('h3');
+        h3.style.width = '100%';
+        h3.style.position = 'absolute';
+        h3.innerText = 'HELLO WORLD (0/10)';
+
+        // Build the string that is needed for the title
+        if (this.opts && this.opts.title) {
+            this.titleElement.title = this.opts.title + ' ';
+        }
+
+        if (this.opts && this.opts.step && this.opts.totalSteps) {
+            // TODO improve this
+            this.titleElement.title += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
+        } else if (this.opts && this.opts.step) {
+            this.titleElement.title += this.opts.step;
+        }
+
+        // const newButtons = this.createButtons();
+        // newButtons.forEach(element => {
+        //     leftButtonDiv.appendChild(element);
+        // });
+
+        // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
+        h3.style.textAlign = 'center';
+        div.appendChild(leftButtonDiv);
+        div.appendChild(h3);
+        div.appendChild(rightButtonDiv);
+
+        return div;
+    }
+
+    /**
+     * Show the title bar if it is not attached AND
+     * steps or title is defined.
+     *
+     * If the title bar is already showing and step and title
+     * is defined then we need to update the properties
+     */
+    shouldShowTitleBar(): boolean {
+        return (!this.isAttached && (this.opts.step !== undefined ) || (this.opts.title !== undefined));
+    }
+
+    resetContainer() {
+        this._container = document.createElement('div');
+    }
+
+    get container() {
+        return this._container;
+    }
+
+    set container(container: HTMLElement) {
+        this._container = container;
+    }
+}
+
 @injectable()
 export class MonacoQuickOpenService extends QuickOpenService {
 
@@ -54,8 +183,9 @@ export class MonacoQuickOpenService extends QuickOpenService {
     protected _widget: monaco.quickOpen.QuickOpenWidget | undefined;
     protected opts: MonacoQuickOpenControllerOpts | undefined;
     protected previousActiveElement: Element | undefined;
-    protected titlePanel: HTMLElement | undefined;
-    protected widgetElement: HTMLElement | undefined;
+    protected titlePanel: MonacoTitleBar;
+
+    private apple: boolean;
 
     @inject(MonacoContextKeyService)
     protected readonly contextKeyService: MonacoContextKeyService;
@@ -81,6 +211,9 @@ export class MonacoQuickOpenService extends QuickOpenService {
         container.style.top = '0px';
         container.style.right = '50%';
         overlayWidgets.appendChild(container);
+
+        this.titlePanel = new MonacoTitleBar();
+        this.apple = false;
     }
 
     @postConstruct()
@@ -101,6 +234,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
         this.showInputDecoration(decoration);
     }
+
     hideDecoration(): void {
         this.clearInputDecoration();
     }
@@ -112,38 +246,22 @@ export class MonacoQuickOpenService extends QuickOpenService {
             this.previousActiveElement = activeContext;
             this.contextKeyService.activeContext = activeContext instanceof HTMLElement ? activeContext : undefined;
         }
-        this.hideDecoration();
 
-        // console.log('Trying to set opts');
-        // if (this.opts && this.widgetElement && !this.titlePanel && (this.opts.title || this.opts.step)) {
-        //     console.log('Opts was set');
-        //     this.titlePanel = this.attachOptionalTitleBar();
-        //     this.widgetElement.appendChild(this.titlePanel);
-        // } else if (this.titlePanel && this.widgetElement) {
-        //     /**
-        //      * If we have the title pane attached to the container element we
-        //      * have to remove it otherwise it will still be there
-        //      */
-        //     if (this.widgetElement.contains(this.titlePanel)) {
-        //         this.widgetElement.removeChild(this.titlePanel);
-        //     }
-        //     this.titlePanel = undefined;
+        this.titlePanel.opts = opts; // Reset everytime we hit internalOpen
+        this.titlePanel.resetContainer();
+        console.log('Should show title bar: ' + this.titlePanel.shouldShowTitleBar());
+        // if (this.titlePanel.shouldShowTitleBar()) {
+        //     console.log('Attaching title bar');
+        //     this.container.appendChild(this.titlePanel.attachTitleBar());
+        //     this.titlePanel.isAttached = true;
+        //     console.log('the container is 2: ' + this.titlePanel.container);
         // }
 
+        this.hideDecoration();
         this.widget.show(this.opts.prefix || '');
         this.setPlaceHolder(opts.inputAriaLabel);
         this.setPassword(opts.password ? true : false);
         this.inQuickOpenKey.set(true);
-        // console.log(this.widget.inputBox);
-        // if (this.widget.inputBox) {
-        //     console.log('Setting input box');
-        //     const test2 = document.createElement('h3');
-        //     test2.innerText = 'Test of the element';
-        //     test2.style.display = 'flex';
-        //     this.widget.inputBox
-        //     console.log('Appending the child');
-        // }
-
     }
 
     setPlaceHolder(placeHolder: string): void {
@@ -183,10 +301,45 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
     }
 
-    showProgress(progress: boolean) {
-        if (progress) {
+    setBusy(busy: boolean) {
+        if (busy) {
             console.error('implement progress');
         }
+    }
+
+    setButtons(buttons: []) {
+    }
+
+    setIgnoreFocusOut(ignoreFocusOut: boolean) {
+    }
+
+    setPrompt(prompt: string | undefined) {
+    }
+
+    setStep(step: number | undefined) {
+        this.titlePanel.opts.step = step;
+        if (!this.titlePanel.isAttached) {
+            this.titlePanel.attachTitleBar();
+            this.titlePanel.isAttached = true;
+        }
+    }
+
+    setTitle(title: string | undefined) {
+        this.titlePanel.opts.title = title;
+        if (!this.titlePanel.isAttached) {
+            this.titlePanel.attachTitleBar();
+            this.titlePanel.isAttached = true;
+        }
+    }
+
+    setTotalSteps(totalSteps: number | undefined) {
+        this.titlePanel.opts.totalSteps = totalSteps;
+    }
+
+    setValidationMessage(setValidationMessage: string | undefined) {
+    }
+
+    setValue(value: string | undefined) {
     }
 
     protected get widget(): monaco.quickOpen.QuickOpenWidget {
@@ -208,101 +361,45 @@ export class MonacoQuickOpenService extends QuickOpenService {
                 this.onClose(true);
             },
             onType: lookFor => this.onType(lookFor || ''),
-            onFocusLost: () => (this.opts && this.opts.ignoreFocusOut !== undefined) ? this.opts.ignoreFocusOut : false
+            onFocusLost: () => {
+                if (this.opts && this.opts.ignoreFocusOut !== undefined) {
+                    if (this.opts.ignoreFocusOut === true) {
+                        this.onClose(true);
+                    }
+                    return this.opts.ignoreFocusOut;
+                } else {
+                    return false;
+                }
+            }
         }, {});
         this.attachQuickOpenStyler();
-        const b = this._widget.create();
-        b.prepend(this.attachOptionalTitleBar());
-        const test2 = document.createElement('h3');
-        test2.innerText = 'Test of the element';
-        test2.style.display = 'flex';
-        b.append(test2);
+        const newWidget = this._widget.create();
+        newWidget.prepend(this.titlePanel.container); // Prepend the outer div
+        console.log('the container is 1: ' + this.titlePanel.container);
         return this._widget;
     }
 
-    private attachOptionalTitleBar() {
-        console.log('Title bar being set');
-        // this.container.style.top = '3%'; // This moves it down so the top style is visible
+    // private createButtons() {
+    //     const d = [];
+    //     if (this.opts && this.opts.buttons) {
+    //         for (const b of this.opts.buttons) {
+    //             d.push(this.createButton(b));
+    //         }
+    //     }
+    //     return d;
+    // }
 
-        // Create a div that contains all the new title top stuff
-        const div = document.createElement('div');
-        div.style.height = '3%'; // Reset the height to be valid
-        div.style.display = 'flex';
-        div.style.textAlign = 'center';
-
-        /**
-         * The stucture of this is
-         * <div> left buttons </div>
-         * <h3> the title etc </h3>
-         * <div> right buttons </div>
-         */
-        const leftButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the left
-        leftButtonDiv.style.display = 'inherit';
-
-        const test1 = document.createElement('h3');
-        test1.innerText = 'test';
-        leftButtonDiv.appendChild(test1);
-
-        const rightButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the right
-        rightButtonDiv.style.position = 'absolute';
-        rightButtonDiv.style.right = '0';
-
-        const test3 = document.createElement('h3');
-        test3.innerText = 'test';
-        rightButtonDiv.appendChild(test3);
-
-        // Create a centered title element
-        const h3 = document.createElement('h3');
-        h3.style.width = '100%';
-        h3.style.position = 'absolute';
-        h3.innerText = 'HELLO WORLD (0/10)';
-
-        // Build the string that is needed for the title
-        // if (this.opts && this.opts.title) {
-        //     h1.title = this.opts.title + ' ';
-        // }
-
-        // if (this.opts && this.opts.step && this.opts.totalSteps) {
-        //     // TODO improve this
-        //     h1.title += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
-        // } else if (this.opts && this.opts.step) {
-        //     h1.title += this.opts.step;
-        // }
-
-        const newButtons = this.createButtons();
-        newButtons.forEach(element => {
-            leftButtonDiv.appendChild(element);
-        });
-
-        // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
-        h3.style.textAlign = 'center';
-        div.appendChild(leftButtonDiv);
-        div.appendChild(h3);
-        div.appendChild(rightButtonDiv);
-        return div;
-    }
-
-    private createButtons() {
-        const d = [];
-        if (this.opts && this.opts.buttons) {
-            for (const b of this.opts.buttons) {
-                d.push(this.createButton(b));
-            }
-        }
-        return d;
-    }
-
-    private createButton(button: TitleButton) {
-        // Do some button stuff
-        console.log(button);
-        const aTag = document.createElement('a');
-        aTag.title = button.tooltip ? button.tooltip : '';
-        aTag.onclick = () => {
-            console.log('Button has been clicked');
-            this.onDidTriggerButtonEmitter.fire(button);
-        };
-        return aTag;
-    }
+    // private createButton(button: TitleButton) {
+    //     // Do some button stuff
+    //     console.log(button);
+    //     const aTag = document.createElement('a');
+    //     aTag.title = button.tooltip ? button.tooltip : '';
+    //     aTag.onclick = () => {
+    //         console.log('Button has been clicked');
+    //         this.onDidTriggerButtonEmitter.fire(button);
+    //     };
+    //     return aTag;
+    // }
 
     get onDidTriggerButton(): Event<TitleButton> {
         return this.onDidTriggerButtonEmitter.event;

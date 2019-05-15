@@ -124,7 +124,6 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
             console.log('a button has been triggered');
             this.proxy.$onDidTriggerButton(b);
         });
-        console.log('On did accept is: ');
         this.quickInput.onDidAccept(() => {
             console.log('just hit onDidAccept on the backend');
             this.proxy.$onDidAccept();
@@ -139,7 +138,8 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         });
     }
 
-    $setInputBox(busy: boolean,
+    $setInputBox(
+        busy: boolean,
         buttons: QuickInputButton[],
         enabled: boolean,
         ignoreFocusOut: boolean,

@@ -152,6 +152,8 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         validationMessage: string | undefined,
         value: string | undefined) {
 
+        console.log('recieving: ' + title);
+        this.delegate.setTitle(title);
         this.delegate.setEnabled(enabled);
         this.delegate.setPassword(password);
         this.delegate.setPlaceHolder(placeholder);

@@ -21,12 +21,12 @@ import { QuickOpenExtImpl } from '../quick-open';
 
 export class QuickInputExt implements QuickInput {
 
-    private _title: string | undefined;
-    private _step: number | undefined;
-    private _totalSteps: number | undefined;
-    private _enabled: boolean;
-    private _busy: boolean;
-    private _ignoreFocusOut: boolean;
+    protected _title: string | undefined;
+    protected _step: number | undefined;
+    protected _totalSteps: number | undefined;
+    protected _enabled: boolean;
+    protected _busy: boolean;
+    protected _ignoreFocusOut: boolean;
 
     private readonly onDidHideEmitter: Emitter<void>;
 

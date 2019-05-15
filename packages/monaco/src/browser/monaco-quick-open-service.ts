@@ -69,7 +69,7 @@ export class MonacoTitleBar {
 
     constructor() {
         this._container = document.createElement('div');
-        this.titleElement = document.createElement('h1');
+        this.titleElement = document.createElement('h3');
         // this.buttons = document.createElement('div'); // Unknown for now
     }
 
@@ -121,21 +121,21 @@ export class MonacoTitleBar {
         rightButtonDiv.appendChild(test3);
 
         // Create a centered title element
-        const h3 = document.createElement('h3');
-        h3.style.width = '100%';
-        h3.style.position = 'absolute';
-        h3.innerText = 'HELLO WORLD (0/10)';
+        // const h3 = document.createElement('h3');
+        // h3.style.width = '100%';
+        // h3.style.position = 'absolute';
+        // h3.innerText = 'HELLO WORLD (0/10)';
 
         // Build the string that is needed for the title
         if (this.opts && this.opts.title) {
-            this.titleElement.title = this.opts.title + ' ';
+            this.titleElement.innerText = this.opts.title + ' ';
         }
 
         if (this.opts && this.opts.step && this.opts.totalSteps) {
             // TODO improve this
-            this.titleElement.title += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
+            this.titleElement.innerText += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
         } else if (this.opts && this.opts.step) {
-            this.titleElement.title += this.opts.step;
+            this.titleElement.innerText += this.opts.step;
         }
 
         // const newButtons = this.createButtons();
@@ -144,9 +144,9 @@ export class MonacoTitleBar {
         // });
 
         // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
-        h3.style.textAlign = 'center';
+        this.titleElement.style.textAlign = 'center';
         div.appendChild(leftButtonDiv);
-        div.appendChild(h3);
+        div.appendChild(this.titleElement);
         div.appendChild(rightButtonDiv);
 
         return div;
@@ -161,6 +161,10 @@ export class MonacoTitleBar {
      */
     shouldShowTitleBar(): boolean {
         return (!this.isAttached && (this.opts.step !== undefined ) || (this.opts.title !== undefined));
+    }
+
+    titleElementText(innerText: string) {
+        this.titleElement.innerText = innerText;
     }
 
     resetContainer() {
@@ -184,8 +188,6 @@ export class MonacoQuickOpenService extends QuickOpenService {
     protected opts: MonacoQuickOpenControllerOpts | undefined;
     protected previousActiveElement: Element | undefined;
     protected titlePanel: MonacoTitleBar;
-
-    private apple: boolean;
 
     @inject(MonacoContextKeyService)
     protected readonly contextKeyService: MonacoContextKeyService;
@@ -213,7 +215,6 @@ export class MonacoQuickOpenService extends QuickOpenService {
         overlayWidgets.appendChild(container);
 
         this.titlePanel = new MonacoTitleBar();
-        this.apple = false;
     }
 
     @postConstruct()
@@ -249,14 +250,16 @@ export class MonacoQuickOpenService extends QuickOpenService {
 
         this.titlePanel.opts = opts; // Reset everytime we hit internalOpen
         this.titlePanel.resetContainer();
-        console.log('Should show title bar: ' + this.titlePanel.shouldShowTitleBar());
+        // console.log('Should show title bar: ' + this.titlePanel.shouldShowTitleBar());
         // if (this.titlePanel.shouldShowTitleBar()) {
         //     console.log('Attaching title bar');
         //     this.container.appendChild(this.titlePanel.attachTitleBar());
         //     this.titlePanel.isAttached = true;
         //     console.log('the container is 2: ' + this.titlePanel.container);
         // }
-
+        // this.count += 1;
+        // console.log('test' + this.count);
+        // this.titlePanel.titleElementText('test: ' + this.count);
         this.hideDecoration();
         this.widget.show(this.opts.prefix || '');
         this.setPlaceHolder(opts.inputAriaLabel);
@@ -326,10 +329,16 @@ export class MonacoQuickOpenService extends QuickOpenService {
 
     setTitle(title: string | undefined) {
         this.titlePanel.opts.title = title;
-        if (!this.titlePanel.isAttached) {
-            this.titlePanel.attachTitleBar();
-            this.titlePanel.isAttached = true;
+        if (!title) {
+            this.titlePanel.titleElementText('');
+        } else {
+            console.log('lets see');
+            this.titlePanel.titleElementText(title);
         }
+        // if (!this.titlePanel.isAttached) {
+        //     this.titlePanel.attachTitleBar();
+        //     this.titlePanel.isAttached = true;
+        // }
     }
 
     setTotalSteps(totalSteps: number | undefined) {
@@ -374,7 +383,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }, {});
         this.attachQuickOpenStyler();
         const newWidget = this._widget.create();
-        newWidget.prepend(this.titlePanel.container); // Prepend the outer div
+        newWidget.prepend(this.titlePanel.attachTitleBar()); // Prepend the outer div
         console.log('the container is 1: ' + this.titlePanel.container);
         return this._widget;
     }

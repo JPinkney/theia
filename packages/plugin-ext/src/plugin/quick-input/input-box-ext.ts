@@ -36,8 +36,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     private proxy: QuickOpenMain;
 
-    private isVisible: boolean;
-
     // TODO: Replace with disposable emitters
     constructor(proxy: QuickOpenMain, quickOpenExt: QuickOpenExtImpl) {
         super(quickOpenExt);
@@ -73,6 +71,16 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     get onDidTriggerButton(): Event<QuickInputButton> {
         return this.onDidTriggerButtonEmitter.event;
+    }
+
+    set title(title: string | undefined) {
+        this._title = title;
+        console.log('updating title');
+        this.update();
+    }
+
+    get title(): string | undefined {
+        return this._title;
     }
 
     get buttons(): ReadonlyArray<QuickInputButton> {
@@ -130,12 +138,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     }
 
     private update(): void {
-        /**
-         * We don't need to update anything if its not visible
-         */
-        if (!this.isVisible) {
-            return;
-        }
+        console.log('sending: ' + this.title);
         this.proxy.$setInputBox(
             this.busy,
             this.buttons,
@@ -153,13 +156,10 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     }
 
     hide(): void {
-        this.isVisible = false;
         super.hide();
     }
 
     show(): void {
-        // Call across the proxy
-        this.isVisible = true;
 
         /**
          * This is sent as a serialized object because

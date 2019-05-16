@@ -47,30 +47,30 @@ export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOp
     onClose?(canceled: boolean): void;
 }
 
-/**
- * IDEA: What if we had a monaco title bar class that we basically stored
- * at the top of the menu and then we can check if it contains MonacoTitleBar to
- * see if it contains it.
- *
- * Then we can modify the element automatically and it should pick it up?
- * I don't think it needs a re-render or whatever
- */
-export class MonacoTitleBar {
+class MonacoTitleBar {
 
-    private _container: HTMLElement;
-    private _opts: MonacoQuickOpenControllerOpts;
+    private readonly onDidTriggerButtonEmitter: Emitter<TitleButton>;
     private _isAttached: boolean;
 
     /*
      * The idea is that changing the options changes the actual element
      */
     private titleElement: HTMLElement;
+
+    private _title: string | undefined;
+    private _step: number | undefined;
+    private _totalSteps: number | undefined;
+    private _buttons: ReadonlyArray<TitleButton>;
+
     // private buttons: HTMLElement;
 
     constructor() {
-        this._container = document.createElement('div');
         this.titleElement = document.createElement('h3');
-        // this.buttons = document.createElement('div'); // Unknown for now
+        this.onDidTriggerButtonEmitter = new Emitter();
+    }
+
+    get onDidTriggerButton() {
+        return this.onDidTriggerButtonEmitter.event;
     }
 
     get isAttached(): boolean {
@@ -81,23 +81,112 @@ export class MonacoTitleBar {
         this._isAttached = isAttached;
     }
 
-    set opts(options: MonacoQuickOpenControllerOpts) {
-        this._opts = options;
+    set title(title: string | undefined) {
+        this._title = title;
+        this.updateInnerTitleText();
     }
 
-    get opts() {
-        return this._opts;
+    get title(): string | undefined {
+        return this._title;
+    }
+
+    set step(step: number | undefined) {
+        this._step = step;
+        this.updateInnerTitleText();
+    }
+
+    get step(): number | undefined {
+        return this._step;
+    }
+
+    set totalSteps(totalSteps: number | undefined) {
+        this._totalSteps = totalSteps;
+        this.updateInnerTitleText();
+    }
+
+    get totalSteps(): number | undefined {
+        return this._totalSteps;
+    }
+
+    set buttons(buttons: ReadonlyArray<TitleButton> | undefined) {
+        if (buttons === undefined) {
+            this._buttons = [];
+            return;
+        }
+
+        this._buttons = buttons;
+    }
+
+    get buttons() {
+        return this._buttons;
+    }
+
+    private updateInnerTitleText(): void {
+        let innerTitle = '';
+
+        if (this.title) {
+            innerTitle = this.title + ' ';
+        }
+
+        if (this.step && this.totalSteps) {
+            innerTitle += (this.step + '/' + this.totalSteps);
+        } else if (this.step) {
+            innerTitle += this.step;
+        } else if (this.totalSteps) {
+            console.error('unknown');
+        }
+
+        this.titleElement.innerText = innerTitle;
+    }
+
+    // Left buttons are for the buttons dervied from QuickInputButtons
+    private getLeftButtons() {
+        if (this._buttons === undefined || this._buttons.length === 0) {
+            return [];
+        }
+        return this._buttons.filter(val => val.location === 0);
     }
 
     /**
-     * Add the title bar impl to the container
+     * Right buttons are an implementation of the QuickInputButton
+     * interface
      */
+    // private getRightButtons() {
+    //     return this._buttons.filter(val => val.location === 1);
+    // }
+
+    /**
+     * Take in a button from getLeftButtons or getRightButtons
+     * and create the actual HTML elements for it
+     */
+    private createButtonElement(buttons: TitleButton[]) {
+        const buttonDiv = document.createElement('div');
+        for (const b of buttons) {
+            const a = document.createElement('a');
+            a.style.width = '20px';
+            a.style.height = '20px';
+            a.style.backgroundImage = `url(\'${b.iconPath.toString()}\')`;
+            a.style.display = 'block';
+            a.title = b.tooltip ? b.tooltip : '';
+            a.onclick = () => {
+                console.log('clicked: ' + b);
+                this.onDidTriggerButtonEmitter.fire(b);
+            };
+            buttonDiv.appendChild(a);
+        }
+        return buttonDiv;
+    }
+
     public attachTitleBar() {
         // Create a div that contains all the new title top stuff
         const div = document.createElement('div');
-        div.style.height = '3%'; // Reset the height to be valid
+        div.style.height = '1%'; // Reset the height to be valid
         div.style.display = 'flex';
-        div.style.textAlign = 'center';
+        div.style.flexDirection = 'row';
+        div.style.flexWrap = 'wrap';
+        div.style.justifyContent = 'flex-start';
+        div.style.alignItems = 'center';
+        // div.style.textAlign = 'center';
 
         /**
          * The stucture of this is
@@ -106,45 +195,29 @@ export class MonacoTitleBar {
          * <div> right buttons </div>
          */
         const leftButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the left
-        leftButtonDiv.style.display = 'inherit';
+        // leftButtonDiv.style.display = 'inherit';
+        leftButtonDiv.style.flex = '1';
+        leftButtonDiv.style.textAlign = 'left';
+        leftButtonDiv.style.display = 'inline-flex';
 
-        const test1 = document.createElement('h3');
-        test1.innerText = 'test';
-        leftButtonDiv.appendChild(test1);
+        leftButtonDiv.appendChild(this.createButtonElement(this.getLeftButtons()));
 
-        const rightButtonDiv = document.createElement('div'); // Holds all the buttons that get added to the right
-        rightButtonDiv.style.position = 'absolute';
-        rightButtonDiv.style.right = '0';
+        const rightButtonDiv = document.createElement('div');
+        rightButtonDiv.style.flex = '1';
+        rightButtonDiv.style.textAlign = 'right';
 
         const test3 = document.createElement('h3');
         test3.innerText = 'test';
+        test3.style.margin = '5px 0';
         rightButtonDiv.appendChild(test3);
 
-        // Create a centered title element
-        // const h3 = document.createElement('h3');
-        // h3.style.width = '100%';
-        // h3.style.position = 'absolute';
-        // h3.innerText = 'HELLO WORLD (0/10)';
-
         // Build the string that is needed for the title
-        if (this.opts && this.opts.title) {
-            this.titleElement.innerText = this.opts.title + ' ';
-        }
+        this.updateInnerTitleText();
 
-        if (this.opts && this.opts.step && this.opts.totalSteps) {
-            // TODO improve this
-            this.titleElement.innerText += '(' + this.opts.step + '/' + this.opts.totalSteps + ')';
-        } else if (this.opts && this.opts.step) {
-            this.titleElement.innerText += this.opts.step;
-        }
-
-        // const newButtons = this.createButtons();
-        // newButtons.forEach(element => {
-        //     leftButtonDiv.appendChild(element);
-        // });
-
-        // h1.title = (this.opts && this.opts.title) ? this.opts.title : 'my_test_title';
+        this.titleElement.style.flex = '1';
         this.titleElement.style.textAlign = 'center';
+        this.titleElement.style.margin = '5px 0';
+
         div.appendChild(leftButtonDiv);
         div.appendChild(this.titleElement);
         div.appendChild(rightButtonDiv);
@@ -160,24 +233,9 @@ export class MonacoTitleBar {
      * is defined then we need to update the properties
      */
     shouldShowTitleBar(): boolean {
-        return (!this.isAttached && (this.opts.step !== undefined ) || (this.opts.title !== undefined));
+        return (!this.isAttached && (this._step !== undefined ) || (this._title !== undefined));
     }
 
-    titleElementText(innerText: string) {
-        this.titleElement.innerText = innerText;
-    }
-
-    resetContainer() {
-        this._container = document.createElement('div');
-    }
-
-    get container() {
-        return this._container;
-    }
-
-    set container(container: HTMLElement) {
-        this._container = container;
-    }
 }
 
 @injectable()
@@ -188,6 +246,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
     protected opts: MonacoQuickOpenControllerOpts | undefined;
     protected previousActiveElement: Element | undefined;
     protected titlePanel: MonacoTitleBar;
+    protected titleBarContainer: HTMLElement;
+    protected titleElement: HTMLElement | undefined;
 
     @inject(MonacoContextKeyService)
     protected readonly contextKeyService: MonacoContextKeyService;
@@ -197,12 +257,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
 
     protected inQuickOpenKey: ContextKey<boolean>;
 
-    private readonly onDidTriggerButtonEmitter: Emitter<TitleButton>;
-
     constructor() {
         super();
-
-        this.onDidTriggerButtonEmitter = new Emitter<TitleButton>();
 
         const overlayWidgets = document.createElement('div');
         overlayWidgets.classList.add('quick-open-overlay');
@@ -215,6 +271,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
         overlayWidgets.appendChild(container);
 
         this.titlePanel = new MonacoTitleBar();
+        this.titleBarContainer = document.createElement('div');
+        this.titleBarContainer.style.backgroundColor = 'var(--theia-menu-color0)';
     }
 
     @postConstruct()
@@ -225,6 +283,18 @@ export class MonacoQuickOpenService extends QuickOpenService {
     open(model: QuickOpenModel, options?: QuickOpenOptions): void {
         this.internalOpen(new MonacoQuickOpenControllerOptsImpl(model, this.keybindingRegistry, options));
     }
+
+    // private resolveButtonURLs(iconPath: URI | { dark: URI, light: URI }): URI | { dark: URI, light: URI } | { id: string } {
+    //     if (typeof iconPath === 'string' || iconPath instanceof URI) {
+    //         return toUrl(iconPath);
+    //     } else {
+    //         const { light, dark } = iconPath as { light: string | URI, dark: string | URI };
+    //         return {
+    //             light: toUrl(light),
+    //             dark: toUrl(dark)
+    //         };
+    //     }
+    // }
 
     showDecoration(type: MessageType): void {
         let decoration = monaco.MarkerSeverity.Info;
@@ -248,18 +318,20 @@ export class MonacoQuickOpenService extends QuickOpenService {
             this.contextKeyService.activeContext = activeContext instanceof HTMLElement ? activeContext : undefined;
         }
 
-        this.titlePanel.opts = opts; // Reset everytime we hit internalOpen
-        this.titlePanel.resetContainer();
-        // console.log('Should show title bar: ' + this.titlePanel.shouldShowTitleBar());
-        // if (this.titlePanel.shouldShowTitleBar()) {
-        //     console.log('Attaching title bar');
-        //     this.container.appendChild(this.titlePanel.attachTitleBar());
-        //     this.titlePanel.isAttached = true;
-        //     console.log('the container is 2: ' + this.titlePanel.container);
-        // }
-        // this.count += 1;
-        // console.log('test' + this.count);
-        // this.titlePanel.titleElementText('test: ' + this.count);
+        this.titlePanel.title = this.opts.title;
+        this.titlePanel.step = this.opts.step;
+        this.titlePanel.totalSteps = this.opts.totalSteps;
+        this.titlePanel.buttons = this.opts.buttons;
+        if (this.titleElement) {
+            this.titleElement.remove();
+        }
+        this.titlePanel.isAttached = false;
+        if (this.titlePanel.shouldShowTitleBar()) {
+            this.titleElement = this.titlePanel.attachTitleBar();
+            this.titleBarContainer.appendChild(this.titleElement);
+            this.titlePanel.isAttached = true;
+        }
+
         this.hideDecoration();
         this.widget.show(this.opts.prefix || '');
         this.setPlaceHolder(opts.inputAriaLabel);
@@ -319,30 +391,31 @@ export class MonacoQuickOpenService extends QuickOpenService {
     setPrompt(prompt: string | undefined) {
     }
 
-    setStep(step: number | undefined) {
-        this.titlePanel.opts.step = step;
-        if (!this.titlePanel.isAttached) {
+    private attachTitleBarIfNeeded(): void {
+        if (!this.titlePanel.isAttached && this.titlePanel.shouldShowTitleBar()) {
             this.titlePanel.attachTitleBar();
             this.titlePanel.isAttached = true;
+        } else if (this.titlePanel.isAttached && !this.titlePanel.shouldShowTitleBar()) {
+            // this.titleBarContainer.removeChild(this.titleElement);
         }
+    }
+
+    setStep(step: number | undefined) {
+        this.titlePanel.step = step;
+        this.titleElement = this.titlePanel.attachTitleBar();
+        this.attachTitleBarIfNeeded();
     }
 
     setTitle(title: string | undefined) {
-        this.titlePanel.opts.title = title;
-        if (!title) {
-            this.titlePanel.titleElementText('');
-        } else {
-            console.log('lets see');
-            this.titlePanel.titleElementText(title);
-        }
-        // if (!this.titlePanel.isAttached) {
-        //     this.titlePanel.attachTitleBar();
-        //     this.titlePanel.isAttached = true;
-        // }
+        this.titlePanel.title = title;
+        this.titleElement = this.titlePanel.attachTitleBar();
+        this.attachTitleBarIfNeeded();
     }
 
     setTotalSteps(totalSteps: number | undefined) {
-        this.titlePanel.opts.totalSteps = totalSteps;
+        this.titlePanel.totalSteps = totalSteps;
+        this.titleElement = this.titlePanel.attachTitleBar();
+        this.attachTitleBarIfNeeded();
     }
 
     setValidationMessage(setValidationMessage: string | undefined) {
@@ -383,35 +456,12 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }, {});
         this.attachQuickOpenStyler();
         const newWidget = this._widget.create();
-        newWidget.prepend(this.titlePanel.attachTitleBar()); // Prepend the outer div
-        console.log('the container is 1: ' + this.titlePanel.container);
+        newWidget.prepend(this.titleBarContainer); // Prepend the outer div
         return this._widget;
     }
 
-    // private createButtons() {
-    //     const d = [];
-    //     if (this.opts && this.opts.buttons) {
-    //         for (const b of this.opts.buttons) {
-    //             d.push(this.createButton(b));
-    //         }
-    //     }
-    //     return d;
-    // }
-
-    // private createButton(button: TitleButton) {
-    //     // Do some button stuff
-    //     console.log(button);
-    //     const aTag = document.createElement('a');
-    //     aTag.title = button.tooltip ? button.tooltip : '';
-    //     aTag.onclick = () => {
-    //         console.log('Button has been clicked');
-    //         this.onDidTriggerButtonEmitter.fire(button);
-    //     };
-    //     return aTag;
-    // }
-
     get onDidTriggerButton(): Event<TitleButton> {
-        return this.onDidTriggerButtonEmitter.event;
+        return this.titlePanel.onDidTriggerButton;
     }
 
     protected attachQuickOpenStyler(): void {

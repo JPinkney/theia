@@ -35,9 +35,6 @@ export class QuickInputExt implements QuickInput {
         this._busy = false;
         this._enabled = true;
         this._ignoreFocusOut = false;
-        this._step = 0;
-        this._title = '';
-        this._totalSteps = 0;
 
         this.disposableCollection = new DisposableCollection();
         this.disposableCollection.push(this.onDidHideEmitter = new Emitter());
@@ -79,13 +76,10 @@ export class QuickInputExt implements QuickInput {
     }
 
     get busy(): boolean {
-        console.log('i Have hit busy');
-        console.log(this._busy);
         return this._busy;
     }
 
     set busy(busy: boolean) {
-        console.log('wtf');
         this._busy = busy;
     }
 

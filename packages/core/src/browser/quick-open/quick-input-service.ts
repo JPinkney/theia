@@ -51,7 +51,7 @@ export interface QuickInputOptions {
     /**
      * Buttons that are displayed on the title panel
      */
-    buttons?: Array<TitleButton>
+    buttons?: ReadonlyArray<TitleButton>
 
     /**
      * Text for when there is a problem with the current input value

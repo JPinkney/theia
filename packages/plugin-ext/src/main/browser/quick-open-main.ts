@@ -21,7 +21,7 @@ import { RPCProtocol } from '../../api/rpc-protocol';
 import { QuickOpenExt, QuickOpenMain, MAIN_RPC_CONTEXT, PickOptions, PickOpenItem } from '../../api/plugin-api';
 import { MonacoQuickOpenService } from '@theia/monaco/lib/browser/monaco-quick-open-service';
 import { QuickInputPluginService } from './quick-input/quick-input-plugin';
-// import { Event } from '@theia/core/lib/common';
+import { TitleButton } from '@theia/core/lib/browser/quick-open/quick-open-service';
 
 export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
 
@@ -104,11 +104,8 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         return this.quickInput.open(options);
     }
 
-    // tslint:disable-next-line:no-any
     $showInputBox(inputBox: InputBox): void {
-        // TODO: Add in buttons. Rn it has incompatible types
-        // TODO: Add in placeholder
-        // TODO: Add in prefix
+        const buttonsToTitleButton = this.convertQuickInputButtonToTitle(inputBox.buttons);
         this.quickInput.open({
             busy: inputBox.busy,
             enabled: inputBox.enabled,
@@ -117,25 +114,47 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
             step: inputBox.step,
             title: inputBox.title,
             totalSteps: inputBox.totalSteps,
-            buttons: [],
-            validationMessage: ''
+            buttons: buttonsToTitleButton,
+            validationMessage: inputBox.validationMessage,
+            placeHolder: inputBox.placeholder,
+            value: inputBox.value,
+            prompt: inputBox.prompt
         });
-        this.delegate.onDidTriggerButton(b => {
-            console.log('a button has been triggered');
-            this.proxy.$onDidTriggerButton(b);
+        this.delegate.onDidTriggerButton(clickedButton => {
+            /**
+             * Convert the compatible TitleButton to a
+             * QuickInputButton so that you do not have a
+             * location setting on the backend
+             */
+            const convertedQuickInputButton = {
+                iconPath: clickedButton.iconPath,
+                tooltip: clickedButton.tooltip
+            } as QuickInputButton;
+            this.proxy.$onDidTriggerButton(convertedQuickInputButton);
         });
         this.quickInput.onDidAccept(() => {
-            console.log('just hit onDidAccept on the backend');
             this.proxy.$onDidAccept();
         });
         this.quickInput.onDidChangeValue(changedValue => {
-            console.log('just hit onDidChangeValue on the backend');
             this.proxy.$onDidChangeValue(changedValue);
         });
         this.quickInput.onDidHide(() => {
-            console.log('just hit onDidHide on the backend');
             this.proxy.$onDidHide();
         });
+    }
+
+    private convertQuickInputButtonToTitle(buttons: ReadonlyArray<QuickInputButton>): ReadonlyArray<TitleButton> {
+        const newTitleButtons = [];
+        for (const b of buttons as TitleButton[]) {
+            // if (b instanceof QuickInputButtons) {
+            //     // Its one of the predefined buttons
+            //     b.location = 0;
+            // } else {
+                b.location = 0;
+            // }
+            newTitleButtons.push(b);
+        }
+        return newTitleButtons;
     }
 
     $setInputBox(
@@ -152,7 +171,6 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         validationMessage: string | undefined,
         value: string | undefined) {
 
-        console.log('recieving: ' + title);
         this.delegate.setTitle(title);
         this.delegate.setEnabled(enabled);
         this.delegate.setPassword(password);

@@ -36,6 +36,8 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     private proxy: QuickOpenMain;
 
+    private visible: boolean;
+
     // TODO: Replace with disposable emitters
     constructor(proxy: QuickOpenMain, quickOpenExt: QuickOpenExtImpl) {
         super(quickOpenExt);
@@ -59,6 +61,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         quickOpenExt.onDidTriggerButton(quickInputButton => {
             this.onDidTriggerButtonEmitter.fire(quickInputButton);
         });
+        this.visible = false;
     }
 
     get onDidAccept(): Event<void> {
@@ -75,7 +78,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
 
     set title(title: string | undefined) {
         this._title = title;
-        console.log('updating title');
         this.update();
     }
 
@@ -138,6 +140,14 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     }
 
     private update(): void {
+        /**
+         * The args are just going to be set when we call show for the first time.
+         * We return early when its invisible to avoid race condition
+         */
+        if (!this.visible) {
+            return;
+        }
+
         console.log('sending: ' + this.title);
         this.proxy.$setInputBox(
             this.busy,
@@ -160,7 +170,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
     }
 
     show(): void {
-
+        this.visible = true;
         /**
          * This is sent as a serialized object because
          * we need access to the getters and setters to know when

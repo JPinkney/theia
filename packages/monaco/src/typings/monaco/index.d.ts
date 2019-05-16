@@ -661,6 +661,7 @@ declare module monaco.quickOpen {
 
     export class QuickOpenWidget implements IDisposable {
         inputBox?: InputBox;
+        progressBar?: any;
         constructor(container: HTMLElement, callbacks: IQuickOpenCallbacks, options: IQuickOpenOptions, usageLogger?: IQuickOpenUsageLogger);
         dispose(): void;
         create(): HTMLElement;

@@ -19,6 +19,7 @@ import { QuickInputOptions, QuickOpenItem, QuickOpenMode, QuickOpenService } fro
 import { Deferred } from '@theia/core/lib/common/promise-util';
 import { MessageType } from '@theia/core/lib/common/message-service-protocol';
 import { Emitter, Event } from '@theia/core/lib/common/event';
+import { DisposableCollection } from '@theia/core/lib/common/disposable';
 
 @injectable()
 export class QuickInputPluginService {
@@ -30,11 +31,13 @@ export class QuickInputPluginService {
     protected onDidAcceptEmitter: Emitter<void>;
     protected onDidChangeValueEmitter: Emitter<string>;
 
+    private disposableCollection: DisposableCollection;
+
     constructor() {
-        // TODO: do the disposable stuff
-        this.onDidHideEmitter = new Emitter();
-        this.onDidAcceptEmitter = new Emitter();
-        this.onDidChangeValueEmitter = new Emitter();
+        this.disposableCollection = new DisposableCollection();
+        this.disposableCollection.push(this.onDidHideEmitter = new Emitter());
+        this.disposableCollection.push(this.onDidAcceptEmitter = new Emitter());
+        this.disposableCollection.push(this.onDidChangeValueEmitter = new Emitter());
     }
 
     get onDidHide(): Event<void> {
@@ -55,8 +58,6 @@ export class QuickInputPluginService {
         let label = prompt;
         let currentText = '';
         const validateInput = options && options.validateInput;
-        console.log('Quick-input-plugin');
-        console.log(options);
         this.quickOpenService.open({
             onType: async (lookFor, acceptor) => {
                 this.onDidChangeValueEmitter.fire(lookFor);
@@ -90,6 +91,7 @@ export class QuickInputPluginService {
                 totalSteps: options.totalSteps,
                 busy: options.busy,
                 enabled: options.enabled,
+                buttons: options.buttons,
                 onClose: () => {
                     result.resolve(undefined);
                     this.onDidHideEmitter.fire(undefined);

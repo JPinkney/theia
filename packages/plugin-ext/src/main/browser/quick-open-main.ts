@@ -14,11 +14,11 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { InputBoxOptions, InputBox, QuickInputButton } from '@theia/plugin';
+import { InputBoxOptions, QuickInputButton } from '@theia/plugin';
 import { interfaces } from 'inversify';
 import { QuickOpenModel, QuickOpenItem, QuickOpenMode } from '@theia/core/lib/browser/quick-open/quick-open-model';
 import { RPCProtocol } from '../../api/rpc-protocol';
-import { QuickOpenExt, QuickOpenMain, MAIN_RPC_CONTEXT, PickOptions, PickOpenItem } from '../../api/plugin-api';
+import { QuickOpenExt, QuickOpenMain, MAIN_RPC_CONTEXT, PickOptions, PickOpenItem, ITransferInputBox } from '../../api/plugin-api';
 import { MonacoQuickOpenService } from '@theia/monaco/lib/browser/monaco-quick-open-service';
 import { QuickInputPluginService } from './quick-input/quick-input-plugin';
 import { TitleButton } from '@theia/core/lib/browser/quick-open/quick-open-service';
@@ -104,8 +104,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         return this.quickInput.open(options);
     }
 
-    $showInputBox(inputBox: InputBox): void {
-        const buttonsToTitleButton = this.convertQuickInputButtonToTitle(inputBox.buttons);
+    $showInputBox(inputBox: ITransferInputBox): void {
         this.quickInput.open({
             busy: inputBox.busy,
             enabled: inputBox.enabled,
@@ -114,7 +113,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
             step: inputBox.step,
             title: inputBox.title,
             totalSteps: inputBox.totalSteps,
-            buttons: buttonsToTitleButton,
+            buttons: inputBox.buttons,
             validationMessage: inputBox.validationMessage,
             placeHolder: inputBox.placeholder,
             value: inputBox.value,
@@ -143,23 +142,9 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         });
     }
 
-    private convertQuickInputButtonToTitle(buttons: ReadonlyArray<QuickInputButton>): ReadonlyArray<TitleButton> {
-        const newTitleButtons = [];
-        for (const b of buttons as TitleButton[]) {
-            // if (b instanceof QuickInputButtons) {
-            //     // Its one of the predefined buttons
-            //     b.location = 0;
-            // } else {
-                b.location = 0;
-            // }
-            newTitleButtons.push(b);
-        }
-        return newTitleButtons;
-    }
-
     $setInputBox(
         busy: boolean,
-        buttons: QuickInputButton[],
+        buttons: TitleButton[],
         enabled: boolean,
         ignoreFocusOut: boolean,
         password: boolean,
@@ -172,6 +157,9 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         value: string | undefined) {
 
         this.delegate.setTitle(title);
+        this.delegate.setStep(step);
+        this.delegate.setTotalSteps(totalSteps);
+        this.delegate.setButtons(buttons);
         this.delegate.setEnabled(enabled);
         this.delegate.setPassword(password);
         this.delegate.setPlaceHolder(placeholder);

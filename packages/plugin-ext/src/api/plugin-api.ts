@@ -64,6 +64,7 @@ import { IJSONSchema, IJSONSchemaSnippet } from '@theia/core/lib/common/json-sch
 import { DebuggerDescription } from '@theia/debug/lib/common/debug-service';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { SymbolInformation } from 'vscode-languageserver-types';
+import { TitleButton } from '@theia/core/lib/browser/quick-open/quick-open-service';
 
 export interface PluginInitData {
     plugins: PluginMetadata[];
@@ -375,12 +376,21 @@ export interface WorkspaceFolderPickOptionsMain {
     ignoreFocusOut?: boolean;
 }
 
+export interface ITransferInputBox extends InputBox {
+    value: string;
+    placeholder: string | undefined;
+    password: boolean;
+    buttons: ReadonlyArray<TitleButton>;
+    prompt: string | undefined;
+    validationMessage: string | undefined;
+}
+
 export interface QuickOpenMain {
     $show(options: PickOptions): Promise<number | number[]>;
     $setItems(items: PickOpenItem[]): Promise<any>;
     $setError(error: Error): Promise<any>;
     $input(options: theia.InputBoxOptions, validateInput: boolean): Promise<string | undefined>;
-    $showInputBox(inputBox: InputBox): void;
+    $showInputBox(inputBox: ITransferInputBox): void;
     $setInputBox(
         busy: boolean,
         buttons: ReadonlyArray<theia.QuickInputButton>,

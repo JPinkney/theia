@@ -25,6 +25,8 @@ import { KEY_CODE_MAP } from './monaco-keycode-map';
 import { ContextKey } from '@theia/core/lib/browser/context-key-service';
 import { MonacoContextKeyService } from './monaco-context-key-service';
 import { Emitter, Event } from '@theia/core/lib/common/event';
+import { BuiltinThemeProvider, ThemeService } from '@theia/core/lib/browser/theming';
+import URI from '@theia/core/lib/common/uri';
 
 export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOpenControllerOpts {
     /**
@@ -52,17 +54,12 @@ class MonacoTitleBar {
     private readonly onDidTriggerButtonEmitter: Emitter<TitleButton>;
     private _isAttached: boolean;
 
-    /*
-     * The idea is that changing the options changes the actual element
-     */
     private titleElement: HTMLElement;
 
     private _title: string | undefined;
     private _step: number | undefined;
     private _totalSteps: number | undefined;
     private _buttons: ReadonlyArray<TitleButton>;
-
-    // private buttons: HTMLElement;
 
     constructor() {
         this.titleElement = document.createElement('h3');
@@ -129,11 +126,9 @@ class MonacoTitleBar {
         }
 
         if (this.step && this.totalSteps) {
-            innerTitle += (this.step + '/' + this.totalSteps);
+            innerTitle += `(${this.step} / ${this.totalSteps})`;
         } else if (this.step) {
             innerTitle += this.step;
-        } else if (this.totalSteps) {
-            console.error('unknown');
         }
 
         this.titleElement.innerText = innerTitle;
@@ -151,25 +146,40 @@ class MonacoTitleBar {
      * Right buttons are an implementation of the QuickInputButton
      * interface
      */
-    // private getRightButtons() {
-    //     return this._buttons.filter(val => val.location === 1);
-    // }
+    private getRightButtons() {
+        if (this._buttons === undefined || this._buttons.length === 0) {
+            return [];
+        }
+        return this._buttons.filter(val => val.location === 1);
+    }
 
     /**
      * Take in a button from getLeftButtons or getRightButtons
      * and create the actual HTML elements for it
      */
-    private createButtonElement(buttons: TitleButton[]) {
+    private createButtonElement(buttons: TitleButton[], themeID: string) {
         const buttonDiv = document.createElement('div');
+        buttonDiv.style.display = 'inline-flex';
         for (const b of buttons) {
             const a = document.createElement('a');
             a.style.width = '20px';
             a.style.height = '20px';
-            a.style.backgroundImage = `url(\'${b.iconPath.toString()}\')`;
+
+            const potentialIcon = b.iconPath as { dark: URI, light: URI };
+            if (potentialIcon.dark !== undefined && potentialIcon.light !== undefined) {
+                a.style.backgroundImage =  `url(${themeID === BuiltinThemeProvider.lightTheme.id ? potentialIcon.light : potentialIcon.dark})`;
+            } else if (b.iconPath.toString() !== '') {
+                a.style.backgroundImage = `url(\'${b.iconPath.toString()}\')`;
+            }
+            if (b.iconClass) {
+                const splitClassList = b.iconClass.split(' '); // a.classList.add does not accept whitespace
+                for (const clazz of splitClassList) {
+                    a.classList.add(clazz);
+                }
+            }
             a.style.display = 'block';
             a.title = b.tooltip ? b.tooltip : '';
             a.onclick = () => {
-                console.log('clicked: ' + b);
                 this.onDidTriggerButtonEmitter.fire(b);
             };
             buttonDiv.appendChild(a);
@@ -177,7 +187,7 @@ class MonacoTitleBar {
         return buttonDiv;
     }
 
-    public attachTitleBar() {
+    public attachTitleBar(themeID: string) {
         // Create a div that contains all the new title top stuff
         const div = document.createElement('div');
         div.style.height = '1%'; // Reset the height to be valid
@@ -198,18 +208,14 @@ class MonacoTitleBar {
         // leftButtonDiv.style.display = 'inherit';
         leftButtonDiv.style.flex = '1';
         leftButtonDiv.style.textAlign = 'left';
-        leftButtonDiv.style.display = 'inline-flex';
 
-        leftButtonDiv.appendChild(this.createButtonElement(this.getLeftButtons()));
+        leftButtonDiv.appendChild(this.createButtonElement(this.getLeftButtons(), themeID));
 
         const rightButtonDiv = document.createElement('div');
         rightButtonDiv.style.flex = '1';
         rightButtonDiv.style.textAlign = 'right';
 
-        const test3 = document.createElement('h3');
-        test3.innerText = 'test';
-        test3.style.margin = '5px 0';
-        rightButtonDiv.appendChild(test3);
+        rightButtonDiv.appendChild(this.createButtonElement(this.getRightButtons(), themeID));
 
         // Build the string that is needed for the title
         this.updateInnerTitleText();
@@ -233,7 +239,7 @@ class MonacoTitleBar {
      * is defined then we need to update the properties
      */
     shouldShowTitleBar(): boolean {
-        return (!this.isAttached && (this._step !== undefined ) || (this._title !== undefined));
+        return ((this._step !== undefined ) || (this._title !== undefined));
     }
 
 }
@@ -254,6 +260,9 @@ export class MonacoQuickOpenService extends QuickOpenService {
 
     @inject(KeybindingRegistry)
     protected readonly keybindingRegistry: KeybindingRegistry;
+
+    @inject(ThemeService)
+    protected readonly themeService: ThemeService;
 
     protected inQuickOpenKey: ContextKey<boolean>;
 
@@ -327,7 +336,8 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
         this.titlePanel.isAttached = false;
         if (this.titlePanel.shouldShowTitleBar()) {
-            this.titleElement = this.titlePanel.attachTitleBar();
+            const currentTheme = this.themeService.getCurrentTheme();
+            this.titleElement = this.titlePanel.attachTitleBar(currentTheme.id);
             this.titleBarContainer.appendChild(this.titleElement);
             this.titlePanel.isAttached = true;
         }
@@ -382,9 +392,6 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
     }
 
-    setButtons(buttons: []) {
-    }
-
     setIgnoreFocusOut(ignoreFocusOut: boolean) {
     }
 
@@ -392,29 +399,34 @@ export class MonacoQuickOpenService extends QuickOpenService {
     }
 
     private attachTitleBarIfNeeded(): void {
-        if (!this.titlePanel.isAttached && this.titlePanel.shouldShowTitleBar()) {
-            this.titlePanel.attachTitleBar();
+        if (this.titleElement) {
+            this.titleElement.remove();
+        }
+        this.titlePanel.isAttached = false;
+        if (this.titlePanel.shouldShowTitleBar()) {
+            const currentTheme = this.themeService.getCurrentTheme();
+            this.titleElement = this.titlePanel.attachTitleBar(currentTheme.id);
+            this.titleBarContainer.appendChild(this.titleElement);
             this.titlePanel.isAttached = true;
-        } else if (this.titlePanel.isAttached && !this.titlePanel.shouldShowTitleBar()) {
-            // this.titleBarContainer.removeChild(this.titleElement);
         }
     }
 
     setStep(step: number | undefined) {
         this.titlePanel.step = step;
-        this.titleElement = this.titlePanel.attachTitleBar();
         this.attachTitleBarIfNeeded();
     }
 
     setTitle(title: string | undefined) {
         this.titlePanel.title = title;
-        this.titleElement = this.titlePanel.attachTitleBar();
         this.attachTitleBarIfNeeded();
     }
 
     setTotalSteps(totalSteps: number | undefined) {
         this.titlePanel.totalSteps = totalSteps;
-        this.titleElement = this.titlePanel.attachTitleBar();
+    }
+
+    setButtons(buttons: ReadonlyArray<TitleButton>) {
+        this.titlePanel.buttons = buttons;
         this.attachTitleBarIfNeeded();
     }
 

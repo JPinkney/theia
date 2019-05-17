@@ -49,6 +49,7 @@ export class QuickInputExt implements QuickInput {
 
     set title(title: string | undefined) {
         this._title = title;
+        this.update();
     }
 
     get step(): number | undefined {
@@ -57,6 +58,7 @@ export class QuickInputExt implements QuickInput {
 
     set step(step: number | undefined) {
         this._step = step;
+        this.update();
     }
 
     get totalSteps(): number | undefined {
@@ -65,6 +67,7 @@ export class QuickInputExt implements QuickInput {
 
     set totalSteps(totalSteps: number | undefined) {
         this._totalSteps = totalSteps;
+        this.update();
     }
 
     get enabled(): boolean {
@@ -73,6 +76,7 @@ export class QuickInputExt implements QuickInput {
 
     set enabled(enabled: boolean) {
         this._enabled = enabled;
+        this.update();
     }
 
     get busy(): boolean {
@@ -81,6 +85,7 @@ export class QuickInputExt implements QuickInput {
 
     set busy(busy: boolean) {
         this._busy = busy;
+        this.update();
     }
 
     get ignoreFocusOut(): boolean {
@@ -89,6 +94,7 @@ export class QuickInputExt implements QuickInput {
 
     set ignoreFocusOut(ignoreFocusOut: boolean) {
         this._ignoreFocusOut = ignoreFocusOut;
+        this.update();
     }
 
     show(): void {
@@ -106,4 +112,9 @@ export class QuickInputExt implements QuickInput {
     get onDidHide(): Event<void> {
         return this.onDidHideEmitter.event;
     }
+
+    /**
+     * Called when a member of the API needs to be updated on the backend
+     */
+    protected update(): void { }
 }

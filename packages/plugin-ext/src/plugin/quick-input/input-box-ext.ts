@@ -18,8 +18,10 @@ import { InputBox, QuickInputButton } from '@theia/plugin';
 import { QuickInputExt } from './quick-input-ext';
 import { Emitter, Event } from '@theia/core/lib/common/event';
 
-import { QuickOpenMain } from '../../common';
+import { QuickOpenMain, ITransferInputBox } from '../../common';
 import { QuickOpenExtImpl } from '../quick-open';
+import { TitleButton } from '@theia/core/lib/browser/quick-open/quick-open-service';
+import { QuickInputButtons, ThemeIcon } from '../types-impl';
 
 export class InputBoxExt extends QuickInputExt implements InputBox {
 
@@ -76,15 +78,6 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         return this.onDidTriggerButtonEmitter.event;
     }
 
-    set title(title: string | undefined) {
-        this._title = title;
-        this.update();
-    }
-
-    get title(): string | undefined {
-        return this._title;
-    }
-
     get buttons(): ReadonlyArray<QuickInputButton> {
         return this._buttons;
     }
@@ -139,7 +132,7 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
         this.update();
     }
 
-    private update(): void {
+    protected update(): void {
         /**
          * The args are just going to be set when we call show for the first time.
          * We return early when its invisible to avoid race condition
@@ -148,10 +141,10 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
             return;
         }
 
-        console.log('sending: ' + this.title);
+        const convertedButtons = this.convertQuickInputToCorrectLocation(this.buttons);
         this.proxy.$setInputBox(
             this.busy,
-            this.buttons,
+            convertedButtons,
             this.enabled,
             this.ignoreFocusOut,
             this.password,
@@ -178,9 +171,10 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
          * sending the InputBox through because it does not preserve the getters/setters
          * which makes the object properties inaccessible
          */
+        const convertedButtons = this.convertQuickInputToCorrectLocation(this.buttons);
         const inputBoxSettings = {
             busy: this.busy,
-            buttons: this.buttons,
+            buttons: convertedButtons,
             enabled: this.enabled,
             ignoreFocusOut: this.ignoreFocusOut,
             password: this.password,
@@ -191,7 +185,35 @@ export class InputBoxExt extends QuickInputExt implements InputBox {
             totalSteps: this.totalSteps,
             validationMessage: this.validationMessage,
             value: this.value
-        } as InputBox;
+        } as ITransferInputBox;
         this.proxy.$showInputBox(inputBoxSettings);
     }
+
+    /**
+     * In VSCode the BACK button shows on the left
+     * whereas implementations of QuickInputButton
+     * show on the right
+     */
+    private convertQuickInputToCorrectLocation(buttons: ReadonlyArray<QuickInputButton>): ReadonlyArray<TitleButton> {
+        const convertedButtons = [];
+        for (const b of buttons as TitleButton[]) {
+            if (this.isBack(b)) {
+                b.location = 0;
+            } else {
+                b.location = 1;
+            }
+            if (b.iconPath instanceof ThemeIcon) {
+                const themeIconClass = b.iconPath.id === 'folder' ? 'fa fa-folder' : 'fa fa-file';
+                b.iconClass = themeIconClass;
+            }
+            convertedButtons.push(b);
+        }
+        console.dir(convertedButtons);
+        return convertedButtons;
+    }
+
+    private isBack(btn: QuickInputButton): boolean {
+        return btn.iconPath === QuickInputButtons.Back.iconPath && btn.tooltip === QuickInputButtons.Back.tooltip;
+    }
+
 }

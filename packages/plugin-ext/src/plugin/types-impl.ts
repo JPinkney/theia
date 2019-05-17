@@ -1911,6 +1911,9 @@ export class QuickInputButtons {
      * When a navigation 'back' button is needed this one should be used for consistency.
      * It comes with a predefined icon, tooltip and location.
      */
-    static readonly Back: theia.QuickInputButton;
+    static readonly Back: theia.QuickInputButton = {
+        iconPath: URI.file(''),
+        tooltip: 'Back'
+    };
     private constructor() {}
 }

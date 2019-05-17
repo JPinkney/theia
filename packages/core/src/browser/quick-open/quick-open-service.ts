@@ -19,13 +19,15 @@ import { QuickOpenModel } from './quick-open-model';
 import { MessageType } from '../../common/message-service-protocol';
 import URI from '../../common/uri';
 
-enum Location {
-    left = 0,
-    right = 1
+export enum TitleButtonLocation {
+    LEFT = 0,
+    RIGHT = 1
 }
+
 export interface TitleButton {
-    location: Location;
+    location: TitleButtonLocation;
     iconPath: URI | { dark: URI, light: URI } | { id: string };
+    iconClass?: string;
     tooltip?: string | undefined;
 }
 

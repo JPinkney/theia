@@ -2168,7 +2168,7 @@ declare module '@theia/plugin' {
     }
 
     /**
-     * A reference to a named icon. Currently only [File](#ThemeIcon.File) and [Folder](#ThemeIcon.Folder) are supported.
+     * A reference to a named icon. Currently only [File](#ThemeIcon.File) and [Folder](#) are supported.
      * Using a theme icon is preferred over a custom icon as it gives theme authors the possibility to change the icons.
      */
     export class ThemeIcon {

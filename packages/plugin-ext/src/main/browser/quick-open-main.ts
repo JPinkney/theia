@@ -159,6 +159,7 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         this.delegate.setTitle(title);
         this.delegate.setStep(step);
         this.delegate.setTotalSteps(totalSteps);
+        this.delegate.setValue(value);
         this.delegate.setButtons(buttons);
         this.delegate.setEnabled(enabled);
         this.delegate.setPassword(password);

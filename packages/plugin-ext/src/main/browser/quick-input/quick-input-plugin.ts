@@ -85,7 +85,7 @@ export class QuickInputPluginService {
                 prefix: options.value,
                 placeholder: options.placeHolder,
                 password: options.password,
-                ignoreFocusOut: true,
+                ignoreFocusOut: options.ignoreFocusOut,
                 title: options.title,
                 step: options.step,
                 totalSteps: options.totalSteps,
@@ -95,6 +95,10 @@ export class QuickInputPluginService {
                 onClose: () => {
                     result.resolve(undefined);
                     this.onDidHideEmitter.fire(undefined);
+                    this.onDidHideEmitter.dispose();
+                    this.onDidAcceptEmitter.dispose();
+                    this.onDidChangeValueEmitter.dispose();
+                    this.disposableCollection.dispose();
                 }
             });
         return result.promise;

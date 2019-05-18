@@ -27,6 +27,7 @@ import { MonacoContextKeyService } from './monaco-context-key-service';
 import { Emitter, Event } from '@theia/core/lib/common/event';
 import { BuiltinThemeProvider, ThemeService } from '@theia/core/lib/browser/theming';
 import URI from '@theia/core/lib/common/uri';
+import { DisposableCollection } from '@theia/core';
 
 export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOpenControllerOpts {
     /**
@@ -42,9 +43,9 @@ export interface MonacoQuickOpenControllerOpts extends monaco.quickOpen.IQuickOp
      * End of extended options for input box
      */
 
-    readonly prefix?: string;
-    readonly password?: boolean;
-    readonly ignoreFocusOut?: boolean;
+    prefix?: string;
+    password?: boolean;
+    ignoreFocusOut?: boolean;
     onType?(lookFor: string, acceptor: (model: monaco.quickOpen.QuickOpenModel) => void): void;
     onClose?(canceled: boolean): void;
 }
@@ -61,9 +62,12 @@ class MonacoTitleBar {
     private _totalSteps: number | undefined;
     private _buttons: ReadonlyArray<TitleButton>;
 
+    private disposableCollection: DisposableCollection;
     constructor() {
         this.titleElement = document.createElement('h3');
-        this.onDidTriggerButtonEmitter = new Emitter();
+
+        this.disposableCollection = new DisposableCollection();
+        this.disposableCollection.push(this.onDidTriggerButtonEmitter = new Emitter());
     }
 
     get onDidTriggerButton() {
@@ -165,10 +169,11 @@ class MonacoTitleBar {
             a.style.width = '20px';
             a.style.height = '20px';
 
-            const potentialIcon = b.iconPath as { dark: URI, light: URI };
-            if (potentialIcon.dark !== undefined && potentialIcon.light !== undefined) {
-                a.style.backgroundImage =  `url(${themeID === BuiltinThemeProvider.lightTheme.id ? potentialIcon.light : potentialIcon.dark})`;
-            } else if (b.iconPath.toString() !== '') {
+            if ('light' in b.iconPath || 'dark' in b.iconPath) {
+                const potentialIcon = b.iconPath as { dark: URI, light: URI };
+                a.style.backgroundImage =  `url(\'${themeID === BuiltinThemeProvider.lightTheme.id ? potentialIcon.light : potentialIcon.dark}\')`;
+            } else {
+                console.log('its instance of URI');
                 a.style.backgroundImage = `url(\'${b.iconPath.toString()}\')`;
             }
             if (b.iconClass) {
@@ -242,6 +247,10 @@ class MonacoTitleBar {
         return ((this._step !== undefined ) || (this._title !== undefined));
     }
 
+    dispose() {
+        this.disposableCollection.dispose();
+    }
+
 }
 
 @injectable()
@@ -293,18 +302,6 @@ export class MonacoQuickOpenService extends QuickOpenService {
         this.internalOpen(new MonacoQuickOpenControllerOptsImpl(model, this.keybindingRegistry, options));
     }
 
-    // private resolveButtonURLs(iconPath: URI | { dark: URI, light: URI }): URI | { dark: URI, light: URI } | { id: string } {
-    //     if (typeof iconPath === 'string' || iconPath instanceof URI) {
-    //         return toUrl(iconPath);
-    //     } else {
-    //         const { light, dark } = iconPath as { light: string | URI, dark: string | URI };
-    //         return {
-    //             light: toUrl(light),
-    //             dark: toUrl(dark)
-    //         };
-    //     }
-    // }
-
     showDecoration(type: MessageType): void {
         let decoration = monaco.MarkerSeverity.Info;
         if (type === MessageType.Warning) {
@@ -346,6 +343,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
         this.widget.show(this.opts.prefix || '');
         this.setPlaceHolder(opts.inputAriaLabel);
         this.setPassword(opts.password ? true : false);
+        this.setEnabled(opts.enabled);
         this.inQuickOpenKey.set(true);
     }
 
@@ -379,23 +377,11 @@ export class MonacoQuickOpenService extends QuickOpenService {
         }
     }
 
-    setEnabled(isEnabled: boolean) {
+    setEnabled(isEnabled: boolean | undefined) {
         const widget = this.widget;
         if (widget.inputBox) {
-            widget.inputBox.inputElement.readOnly = isEnabled;
+            widget.inputBox.inputElement.readOnly = (isEnabled !== undefined) ? !isEnabled : false;
         }
-    }
-
-    setBusy(busy: boolean) {
-        if (busy) {
-            console.error('implement progress');
-        }
-    }
-
-    setIgnoreFocusOut(ignoreFocusOut: boolean) {
-    }
-
-    setPrompt(prompt: string | undefined) {
     }
 
     private attachTitleBarIfNeeded(): void {
@@ -430,10 +416,10 @@ export class MonacoQuickOpenService extends QuickOpenService {
         this.attachTitleBarIfNeeded();
     }
 
-    setValidationMessage(setValidationMessage: string | undefined) {
-    }
-
     setValue(value: string | undefined) {
+        if (this.widget && this.widget.inputBox) {
+            this.widget.inputBox.inputElement.value = (value !== undefined) ? value : '';
+        }
     }
 
     protected get widget(): monaco.quickOpen.QuickOpenWidget {
@@ -457,7 +443,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
             onType: lookFor => this.onType(lookFor || ''),
             onFocusLost: () => {
                 if (this.opts && this.opts.ignoreFocusOut !== undefined) {
-                    if (this.opts.ignoreFocusOut === true) {
+                    if (this.opts.ignoreFocusOut === false) {
                         this.onClose(true);
                     }
                     return this.opts.ignoreFocusOut;
@@ -493,6 +479,7 @@ export class MonacoQuickOpenService extends QuickOpenService {
         if (this.opts && this.opts.onClose) {
             this.opts.onClose(cancelled);
         }
+        this.titlePanel.dispose();
         this.inQuickOpenKey.set(false);
     }
 

@@ -346,15 +346,17 @@ export class KeybindingWidget extends ReactWidget {
         const items: KeybindingItem[] = [];
         for (let i = 0; i < commands.length; i++) {
             const keybindings = this.keybindingRegistry.getKeybindingsForCommand(commands[i].id);
-            const item: KeybindingItem = {
-                id: commands[i].id,
-                command: commands[i].label || '',
-                keybinding: (keybindings && keybindings[0]) ? keybindings[0].keybinding : '',
-                context: (keybindings && keybindings[0]) ? keybindings[0].context : '',
-                scope: (keybindings && keybindings[0] && typeof keybindings[0].scope !== 'undefined')
-                    ? KeybindingScope[keybindings[0].scope!].toLocaleLowerCase() : '',
-            };
-            items.push(item);
+            for (const keybindingCmd of keybindings) {
+                const item: KeybindingItem = {
+                    id: commands[i].id,
+                    command: commands[i].label || '',
+                    keybinding: (keybindings && keybindingCmd) ? keybindingCmd.keybinding : '',
+                    context: (keybindings && keybindingCmd) ? keybindingCmd.context : '',
+                    scope: (keybindings && keybindingCmd && typeof keybindingCmd.scope !== 'undefined')
+                        ? KeybindingScope[keybindingCmd.scope!].toLocaleLowerCase() : '',
+                };
+                items.push(item);
+            }
         }
         return items;
     }
@@ -381,6 +383,7 @@ export class KeybindingWidget extends ReactWidget {
         const id = this.getRawValue(item.id);
         const keybinding = (item.keybinding) ? this.getRawValue(item.keybinding) : '';
         const context = (item.context) ? this.getRawValue(item.context) : '';
+        const scope = item.scope;
         const dialog = new SingleTextInputDialog({
             title: `Edit Keybinding For ${command}`,
             initialValue: keybinding,
@@ -389,6 +392,10 @@ export class KeybindingWidget extends ReactWidget {
         dialog.open().then(async newKeybinding => {
             if (newKeybinding) {
                 await this.keymapsService.setKeybinding({ 'command': id, 'keybinding': newKeybinding, 'context': context });
+                if (scope === 'default') {
+                    const removalCommand = `-${id}`;
+                    await this.keymapsService.setKeybinding({ 'command': removalCommand, 'keybinding': keybinding, 'context': context });
+                }
             }
         });
     }
@@ -415,13 +422,9 @@ export class KeybindingWidget extends ReactWidget {
             return 'keybinding value is required';
         }
         try {
-            const binding = { 'command': command, 'keybinding': keybinding };
             KeySequence.parse(keybinding);
             if (oldKeybinding === keybinding) {
                 return ' '; // if old and new keybindings match, quietly reject update
-            }
-            if (this.keybindingRegistry.containsKeybindingInScope(binding)) {
-                return 'keybinding currently collides';
             }
             return '';
         } catch (error) {

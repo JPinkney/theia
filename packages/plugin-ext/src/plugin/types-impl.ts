@@ -785,6 +785,23 @@ export class Location {
             this.range = new Range(rangeOrPosition, rangeOrPosition);
         }
     }
+
+    /*---------------------------------------------------------------------------------------------
+    *  Copyright (c) Microsoft Corporation. All rights reserved.
+    *  Licensed under the MIT License. See License.txt in the project root for license information.
+    *--------------------------------------------------------------------------------------------*/
+    // copied from https://github.com/microsoft/vscode/blob/master/src/vs/workbench/api/common/extHostTypes.ts
+    // tslint:disable-next-line:no-any
+    static isLocation(thing: any): thing is Location {
+        if (thing instanceof Location) {
+            return true;
+        }
+        if (!thing) {
+            return false;
+        }
+        return Range.isRange((<Location>thing).range)
+            && URI.isUri((<Location>thing).uri);
+    }
 }
 
 export enum DiagnosticTag {

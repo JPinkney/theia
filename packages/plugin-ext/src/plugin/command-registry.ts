@@ -17,8 +17,10 @@
 import * as theia from '@theia/plugin';
 import { CommandRegistryExt, PLUGIN_RPC_CONTEXT as Ext, CommandRegistryMain } from '../api/plugin-api';
 import { RPCProtocol } from '../api/rpc-protocol';
-import { Disposable } from './types-impl';
-import { KnownCommands } from './type-converters';
+import { Disposable, Range, Position, Location } from './types-impl';
+import { cloneAndChange } from '../common/object';
+import { fromRange, fromPosition, fromLocation } from './type-converters';
+import { KnownCommands } from '../common/known-commands';
 
 // tslint:disable-next-line:no-any
 export type Handler = <T>(...args: any[]) => T | PromiseLike<T>;
@@ -90,9 +92,27 @@ export class CommandRegistryImpl implements CommandRegistryExt {
     executeCommand<T>(id: string, ...args: any[]): PromiseLike<T | undefined> {
         if (this.handlers.has(id)) {
             return this.executeLocalCommand(id, ...args);
-        } else {
+        } else if (KnownCommands.exclusions.hasOwnProperty(id)) {
+            // Using the KnownCommand exclusions, convert the commands manually
             return KnownCommands.map(id, args, (mappedId: string, mappedArgs: any[] | undefined) =>
                 this.proxy.$executeCommand(mappedId, ...mappedArgs));
+        } else {
+            // Automatically convert the incoming arguments from 0 based types (VSCode API) to 1 based types (Monaco)
+            args = cloneAndChange(args, function (value: any) {
+                if (Position.isPosition(value)) {
+                    return fromPosition(value);
+                }
+                if (Range.isRange(value)) {
+                    return fromRange(value);
+                }
+                if (Location.isLocation(value)) {
+                    return fromLocation(value);
+                }
+                if (!Array.isArray(value)) {
+                    return value;
+                }
+            });
+            return this.proxy.$executeCommand(id, args);
         }
     }
     // tslint:enable:no-any

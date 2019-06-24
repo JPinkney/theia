@@ -20,3 +20,4 @@ export * from '../plugin/plugin-context';
 export * from '../api/plugin-api';
 export * from '../main/node/temp-dir-util';
 export * from './plugin-ext-api-contribution';
+export * from './known-commands';

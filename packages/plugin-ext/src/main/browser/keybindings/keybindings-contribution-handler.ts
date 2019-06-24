@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { PluginContribution, Keybinding as PluginKeybinding } from '../../../common';
+import { PluginContribution, Keybinding as PluginKeybinding, KnownCommands } from '../../../common';
 import { Keybinding, KeybindingRegistry } from '@theia/core/lib/browser/keybinding';
 import { ILogger } from '@theia/core/lib/common/logger';
 import { OS } from '@theia/core/lib/common/os';
@@ -56,7 +56,16 @@ export class KeybindingsContributionPointHandler {
         if (!keybinding) {
             return undefined;
         }
-        const { command, when } = pluginKeybinding;
+        let { command, when } = pluginKeybinding;
+
+        /**
+         * Commands must be converted to their theia counterparts
+         * otherwise the command registry cannot find a handler
+         */
+        if (KnownCommands.mappings[command]) {
+            command = KnownCommands.mappings[command];
+        }
+
         return { keybinding, command, when };
     }
 

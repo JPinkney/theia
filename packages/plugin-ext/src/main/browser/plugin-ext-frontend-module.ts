@@ -27,7 +27,7 @@ import { HostedPluginSupport } from '../../hosted/browser/hosted-plugin';
 import { HostedPluginWatcher } from '../../hosted/browser/hosted-plugin-watcher';
 import { OpenUriCommandHandler } from './commands';
 import { PluginApiFrontendContribution } from './plugin-frontend-contribution';
-import { HostedPluginServer, hostedServicePath, PluginServer, pluginServerJsonRpcPath } from '../../common/plugin-protocol';
+import { HostedPluginServer, hostedServicePath, PluginServer, pluginServerJsonRpcPath, PluginMetrics, metricsJsonRpcPath } from '../../common/plugin-protocol';
 import { ModalNotification } from './dialogs/modal-notification';
 import { PluginWidget } from './plugin-ext-widget';
 import { PluginFrontendViewContribution } from './plugin-frontend-view-contribution';
@@ -60,6 +60,8 @@ import { ViewColumnService } from './view-column-service';
 import { ViewContextKeyService } from './view/view-context-key-service';
 import { PluginViewWidget, PluginViewWidgetIdentifier } from './view/plugin-view-widget';
 import { TreeViewWidgetIdentifier, VIEW_ITEM_CONTEXT_MENU, PluginTree, TreeViewWidget, PluginTreeModel } from './view/tree-view-widget';
+import { PluginDataExtractor } from './plugin-data-extractor';
+import { PluginDataResolver } from './plugin-data-resolver';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
@@ -172,4 +174,12 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(DebugSessionContributionRegistry).toService(PluginDebugSessionContributionRegistry);
 
     bind(ViewColumnService).toSelf().inSingletonScope();
+
+    bind(PluginMetrics).toDynamicValue(ctx => {
+        const connection = ctx.container.get(WebSocketConnectionProvider);
+        return connection.createProxy<PluginMetrics>(metricsJsonRpcPath);
+    }).inSingletonScope();
+
+    bind(PluginDataExtractor).toSelf().inSingletonScope();
+    bind(PluginDataResolver).toSelf().inSingletonScope();
 });

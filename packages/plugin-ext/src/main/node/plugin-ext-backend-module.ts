@@ -21,7 +21,7 @@ import { PluginsKeyValueStorage } from './plugins-key-value-storage';
 import { PluginDeployerContribution } from './plugin-deployer-contribution';
 import {
     PluginDeployer, PluginDeployerResolver, PluginDeployerFileHandler,
-    PluginDeployerDirectoryHandler, PluginServer, pluginServerJsonRpcPath
+    PluginDeployerDirectoryHandler, PluginServer, pluginServerJsonRpcPath, metricsJsonRpcPath, PluginMetrics
 } from '../../common/plugin-protocol';
 import { PluginDeployerImpl } from './plugin-deployer-impl';
 import { LocalDirectoryPluginDeployerResolver } from './resolvers/plugin-local-dir-resolver';
@@ -34,6 +34,9 @@ import { PluginPathsService, pluginPathsServicePath } from '../common/plugin-pat
 import { PluginPathsServiceImpl } from './paths/plugin-paths-service';
 import { PluginServerHandler } from './plugin-server-handler';
 import { PluginCliContribution } from './plugin-cli-contribution';
+import { MetricsContribution } from '@theia/metrics/lib/node/metrics-contribution';
+import { PluginMetricsContribution } from './plugin-metrics';
+import { PluginMetricsHandler } from './plugin-metrics-handler';
 
 export function bindMainBackend(bind: interfaces.Bind): void {
     bind(PluginApiContribution).toSelf().inSingletonScope();
@@ -70,4 +73,12 @@ export function bindMainBackend(bind: interfaces.Bind): void {
     bind(PluginCliContribution).toSelf().inSingletonScope();
     bind(CliContribution).toService(PluginCliContribution);
 
+    bind(PluginMetrics).to(PluginMetricsHandler).inSingletonScope();
+    bind(ConnectionHandler).toDynamicValue(ctx =>
+        new JsonRpcConnectionHandler(metricsJsonRpcPath, () =>
+            ctx.container.get(PluginMetrics)
+        )
+    ).inSingletonScope();
+
+    bind(MetricsContribution).to(PluginMetricsContribution).inSingletonScope();
 }

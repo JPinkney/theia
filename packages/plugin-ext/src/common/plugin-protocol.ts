@@ -664,3 +664,13 @@ export const PluginHostEnvironmentVariable = Symbol('PluginHostEnvironmentVariab
 export interface PluginHostEnvironmentVariable {
     process(env: NodeJS.ProcessEnv): void;
 }
+
+/**
+ * The JSON-RPC workspace interface for plugin metrics
+ */
+export const metricsJsonRpcPath = '/services/plugin-ext/metrics';
+export const PluginMetrics = Symbol('PluginMetrics');
+export interface PluginMetrics {
+    setMetrics(metrics: string): void;
+    getMetrics(): string;
+}

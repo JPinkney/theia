@@ -1086,6 +1086,11 @@ export interface ProcessTaskDto extends TaskDto, CommandProperties {
     windows?: CommandProperties;
 }
 
+export interface LanguagesInfo {
+    id: string;
+    name: string;
+}
+
 export interface LanguagesExt {
     $provideCompletionItems(handle: number, resource: UriComponents, position: Position,
         context: CompletionContext, token: CancellationToken): Promise<CompletionResultDto | undefined>;
@@ -1144,28 +1149,29 @@ export interface LanguagesMain {
     $changeLanguage(resource: UriComponents, languageId: string): Promise<void>;
     $setLanguageConfiguration(handle: number, languageId: string, configuration: SerializedLanguageConfiguration): void;
     $unregister(handle: number): void;
-    $registerCompletionSupport(handle: number, selector: SerializedDocumentFilter[], triggerCharacters: string[], supportsResolveDetails: boolean): void;
-    $registerImplementationProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerTypeDefinitionProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerDefinitionProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerReferenceProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerSignatureHelpProvider(handle: number, selector: SerializedDocumentFilter[], metadata: theia.SignatureHelpProviderMetadata): void;
-    $registerHoverProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerDocumentHighlightProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerQuickFixProvider(handle: number, selector: SerializedDocumentFilter[], codeActionKinds?: string[]): void;
+    $registerCompletionSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[],
+        triggerCharacters: string[], supportsResolveDetails: boolean): void;
+    $registerImplementationProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerTypeDefinitionProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerDefinitionProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerReferenceProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerSignatureHelpProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], metadata: theia.SignatureHelpProviderMetadata): void;
+    $registerHoverProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerDocumentHighlightProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerQuickFixProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], codeActionKinds?: string[]): void;
     $clearDiagnostics(id: string): void;
     $changeDiagnostics(id: string, delta: [string, MarkerData[]][]): void;
-    $registerDocumentFormattingSupport(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerRangeFormattingProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerOnTypeFormattingProvider(handle: number, selector: SerializedDocumentFilter[], autoFormatTriggerCharacters: string[]): void;
-    $registerDocumentLinkProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerCodeLensSupport(handle: number, selector: SerializedDocumentFilter[], eventHandle?: number): void;
+    $registerDocumentFormattingSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerRangeFormattingProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerOnTypeFormattingProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], autoFormatTriggerCharacters: string[]): void;
+    $registerDocumentLinkProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerCodeLensSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], eventHandle?: number): void;
     $emitCodeLensEvent(eventHandle: number, event?: any): void;
-    $registerOutlineSupport(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerWorkspaceSymbolProvider(handle: number): void;
-    $registerFoldingRangeProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerDocumentColorProvider(handle: number, selector: SerializedDocumentFilter[]): void;
-    $registerRenameProvider(handle: number, selector: SerializedDocumentFilter[], supportsResoveInitialValues: boolean): void;
+    $registerOutlineSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerWorkspaceSymbolProvider(handle: number, languageInfo: LanguagesInfo): void;
+    $registerFoldingRangeProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerDocumentColorProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void;
+    $registerRenameProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], supportsResoveInitialValues: boolean): void;
 }
 
 export interface WebviewPanelViewState {

@@ -33,6 +33,7 @@ import {
     WorkspaceEditDto,
     ResourceTextEditDto,
     ResourceFileEditDto,
+    LanguagesInfo,
 } from '../../common/plugin-api-rpc';
 import { interfaces } from 'inversify';
 import { SerializedDocumentFilter, MarkerData, Range, WorkspaceSymbolProvider, RelatedInformation, MarkerSeverity, DocumentLink } from '../../common/plugin-api-rpc-model';
@@ -46,6 +47,28 @@ import { ProblemManager } from '@theia/markers/lib/browser';
 import * as vst from 'vscode-languageserver-types';
 import * as theia from '@theia/plugin';
 
+export enum FeatureEnum {
+    Completion = 'Completion',
+    Definition = 'Definition',
+    Reference = 'Reference',
+    SignatureHelp = 'SignatureHelp',
+    Implementation = 'Implementation',
+    TypeDefinition = 'TypeDefinition',
+    Hover = 'Hover',
+    DocumentHighlight = 'DocumentHighlight',
+    WorkspaceSymbol = 'WorkspaceSymbol',
+    DocumentLink = 'DocumentLink',
+    CodeLens = 'CodeLens',
+    DocumentSymbol = 'Outline',
+    DocumentFormatting = 'DocumentFormatting',
+    RangeFormatting = 'RangeFormatting',
+    OnTypeFormatting = 'OnTypeFormatting',
+    FoldingRange = 'FoldingRange',
+    DocumentColor = 'DocumentColor',
+    QuickFix = 'QuickFix',
+    Rename = 'Rename'
+}
+
 export class LanguagesMainImpl implements LanguagesMain {
 
     private readonly monacoLanguages: MonacoLanguages;
@@ -58,6 +81,9 @@ export class LanguagesMainImpl implements LanguagesMain {
         this.monacoLanguages = container.get(MonacoLanguages);
         this.problemManager = container.get(ProblemManager);
     }
+
+    // map of plugin id -> map of the register method for that plugin to the handle
+    public pluginToFeatureMap = new Map<string, Map<string, number>>();
 
     $getLanguages(): Promise<string[]> {
         return Promise.resolve(monaco.languages.getLanguages().map(l => l.id));
@@ -97,7 +123,9 @@ export class LanguagesMainImpl implements LanguagesMain {
         this.disposables.set(handle, monaco.languages.setLanguageConfiguration(languageId, config));
     }
 
-    $registerCompletionSupport(handle: number, selector: SerializedDocumentFilter[], triggerCharacters: string[], supportsResolveDetails: boolean): void {
+    $registerCompletionSupport(handle: number, languageInfo: LanguagesInfo,
+        selector: SerializedDocumentFilter[], triggerCharacters: string[], supportsResolveDetails: boolean): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Completion, handle);
         this.disposables.set(handle, monaco.modes.CompletionProviderRegistry.register(fromLanguageSelector(selector), {
             triggerCharacters,
             provideCompletionItems: (model, position, context, token) =>
@@ -117,7 +145,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         }));
     }
 
-    $registerDefinitionProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerDefinitionProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Definition, handle);
         const languageSelector = fromLanguageSelector(selector);
         const definitionProvider = this.createDefinitionProvider(handle);
         const disposable = new DisposableCollection();
@@ -125,7 +154,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         this.disposables.set(handle, disposable);
     }
 
-    $registerReferenceProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerReferenceProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Reference, handle);
         const languageSelector = fromLanguageSelector(selector);
         const referenceProvider = this.createReferenceProvider(handle);
         const disposable = new DisposableCollection();
@@ -154,7 +184,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerSignatureHelpProvider(handle: number, selector: SerializedDocumentFilter[], metadata: theia.SignatureHelpProviderMetadata): void {
+    $registerSignatureHelpProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], metadata: theia.SignatureHelpProviderMetadata): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.SignatureHelp, handle);
         const languageSelector = fromLanguageSelector(selector);
         const signatureHelpProvider = this.createSignatureHelpProvider(handle, metadata);
         const disposable = new DisposableCollection();
@@ -175,7 +206,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         }
     }
 
-    $registerImplementationProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerImplementationProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Implementation, handle);
         const languageSelector = fromLanguageSelector(selector);
         const implementationProvider = this.createImplementationProvider(handle);
         const disposable = new DisposableCollection();
@@ -209,7 +241,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerTypeDefinitionProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerTypeDefinitionProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.TypeDefinition, handle);
         const languageSelector = fromLanguageSelector(selector);
         const typeDefinitionProvider = this.createTypeDefinitionProvider(handle);
         const disposable = new DisposableCollection();
@@ -243,7 +276,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerHoverProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerHoverProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Hover, handle);
         const languageSelector = fromLanguageSelector(selector);
         const hoverProvider = this.createHoverProvider(handle);
         const disposable = new DisposableCollection();
@@ -258,7 +292,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerDocumentHighlightProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerDocumentHighlightProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.DocumentHighlight, handle);
         const languageSelector = fromLanguageSelector(selector);
         const documentHighlightProvider = this.createDocumentHighlightProvider(handle);
         const disposable = new DisposableCollection();
@@ -291,7 +326,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerWorkspaceSymbolProvider(handle: number): void {
+    $registerWorkspaceSymbolProvider(handle: number, languageInfo: LanguagesInfo): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.WorkspaceSymbol, handle);
         const workspaceSymbolProvider = this.createWorkspaceSymbolProvider(handle);
         const disposable = new DisposableCollection();
         disposable.push(this.monacoLanguages.registerWorkspaceSymbolProvider(workspaceSymbolProvider));
@@ -305,7 +341,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerDocumentLinkProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerDocumentLinkProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.DocumentLink, handle);
         const languageSelector = fromLanguageSelector(selector);
         const linkProvider = this.createLinkProvider(handle);
         const disposable = new DisposableCollection();
@@ -341,7 +378,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerCodeLensSupport(handle: number, selector: SerializedDocumentFilter[], eventHandle: number): void {
+    $registerCodeLensSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], eventHandle: number): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.CodeLens, handle);
         const languageSelector = fromLanguageSelector(selector);
         const lensProvider = this.createCodeLensProvider(handle);
 
@@ -383,7 +421,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         }
     }
 
-    $registerOutlineSupport(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerOutlineSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.DocumentSymbol, handle);
         const languageSelector = fromLanguageSelector(selector);
         const symbolProvider = this.createDocumentSymbolProvider(handle);
 
@@ -446,7 +485,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerDocumentFormattingSupport(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerDocumentFormattingSupport(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.DocumentFormatting, handle);
         const languageSelector = fromLanguageSelector(selector);
         const documentFormattingEditSupport = this.createDocumentFormattingSupport(handle);
         const disposable = new DisposableCollection();
@@ -461,7 +501,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerRangeFormattingProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerRangeFormattingProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.RangeFormatting, handle);
         const languageSelector = fromLanguageSelector(selector);
         const rangeFormattingEditProvider = this.createRangeFormattingProvider(handle);
         const disposable = new DisposableCollection();
@@ -476,7 +517,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerOnTypeFormattingProvider(handle: number, selector: SerializedDocumentFilter[], autoFormatTriggerCharacters: string[]): void {
+    $registerOnTypeFormattingProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], autoFormatTriggerCharacters: string[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.OnTypeFormatting, handle);
         const languageSelector = fromLanguageSelector(selector);
         const onTypeFormattingProvider = this.createOnTypeFormattingProvider(handle, autoFormatTriggerCharacters);
         const disposable = new DisposableCollection();
@@ -495,7 +537,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerFoldingRangeProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerFoldingRangeProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.FoldingRange, handle);
         const languageSelector = fromLanguageSelector(selector);
         const provider = this.createFoldingRangeProvider(handle);
         const disposable = new DisposableCollection();
@@ -510,7 +553,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerDocumentColorProvider(handle: number, selector: SerializedDocumentFilter[]): void {
+    $registerDocumentColorProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.DocumentColor, handle);
         const languageSelector = fromLanguageSelector(selector);
         const colorProvider = this.createColorProvider(handle);
         const disposable = new DisposableCollection();
@@ -550,7 +594,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerQuickFixProvider(handle: number, selector: SerializedDocumentFilter[], codeActionKinds?: string[]): void {
+    $registerQuickFixProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], codeActionKinds?: string[]): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.QuickFix, handle);
         const languageSelector = fromLanguageSelector(selector);
         const quickFixProvider = this.createQuickFixProvider(handle, codeActionKinds);
         const disposable = new DisposableCollection();
@@ -575,7 +620,8 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
-    $registerRenameProvider(handle: number, selector: SerializedDocumentFilter[], supportsResolveLocation: boolean): void {
+    $registerRenameProvider(handle: number, languageInfo: LanguagesInfo, selector: SerializedDocumentFilter[], supportsResolveLocation: boolean): void {
+        this.registerPluginWithFeatureHandle(languageInfo.id, FeatureEnum.Rename, handle);
         const languageSelector = fromLanguageSelector(selector);
         const renameProvider = this.createRenameProvider(handle, supportsResolveLocation);
         const disposable = new DisposableCollection();
@@ -595,6 +641,14 @@ export class LanguagesMainImpl implements LanguagesMain {
         };
     }
 
+    private registerPluginWithFeatureHandle(id: string, method: string, handle: number): void {
+        const featureToHandle = this.pluginToFeatureMap.get(id);
+        if (!featureToHandle) {
+            this.pluginToFeatureMap.set(id, new Map().set(method, handle));
+        } else {
+            featureToHandle.set(method, handle);
+        }
+    }
 }
 
 function reviveMarker(marker: MarkerData): vst.Diagnostic {

@@ -122,7 +122,7 @@ import { PreferenceRegistryExtImpl } from './preference-registry';
 import { OutputChannelRegistryExt } from './output-channel-registry';
 import { TerminalServiceExtImpl, TerminalExtImpl } from './terminal-ext';
 import { LanguagesExtImpl, score } from './languages';
-import { fromDocumentSelector } from './type-converters';
+import { fromDocumentSelector, pluginToLanguageInfo } from './type-converters';
 import { DialogsExtImpl } from './dialogs';
 import { NotificationExtImpl } from './notification';
 import { CancellationToken } from '@theia/core/lib/common/cancellation';
@@ -543,10 +543,10 @@ export function createAPIFactory(
                 return languagesExt.setLanguageConfiguration(language, configuration);
             },
             registerCompletionItemProvider(selector: theia.DocumentSelector, provider: theia.CompletionItemProvider, ...triggerCharacters: string[]): theia.Disposable {
-                return languagesExt.registerCompletionItemProvider(selector, provider, triggerCharacters);
+                return languagesExt.registerCompletionItemProvider(selector, provider, triggerCharacters, pluginToLanguageInfo(plugin));
             },
             registerDefinitionProvider(selector: theia.DocumentSelector, provider: theia.DefinitionProvider): theia.Disposable {
-                return languagesExt.registerDefinitionProvider(selector, provider);
+                return languagesExt.registerDefinitionProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerSignatureHelpProvider(
                 selector: theia.DocumentSelector, provider: theia.SignatureHelpProvider, first?: string | theia.SignatureHelpProviderMetadata, ...remaining: string[]
@@ -561,28 +561,28 @@ export function createAPIFactory(
                         triggerCharacters.push(first, ...remaining);
                     }
                 }
-                return languagesExt.registerSignatureHelpProvider(selector, provider, metadata);
+                return languagesExt.registerSignatureHelpProvider(selector, provider, metadata, pluginToLanguageInfo(plugin));
             },
             registerTypeDefinitionProvider(selector: theia.DocumentSelector, provider: theia.TypeDefinitionProvider): theia.Disposable {
-                return languagesExt.registerTypeDefinitionProvider(selector, provider);
+                return languagesExt.registerTypeDefinitionProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerImplementationProvider(selector: theia.DocumentSelector, provider: theia.ImplementationProvider): theia.Disposable {
-                return languagesExt.registerImplementationProvider(selector, provider);
+                return languagesExt.registerImplementationProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerHoverProvider(selector: theia.DocumentSelector, provider: theia.HoverProvider): theia.Disposable {
-                return languagesExt.registerHoverProvider(selector, provider);
+                return languagesExt.registerHoverProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerDocumentHighlightProvider(selector: theia.DocumentSelector, provider: theia.DocumentHighlightProvider): theia.Disposable {
-                return languagesExt.registerDocumentHighlightProvider(selector, provider);
+                return languagesExt.registerDocumentHighlightProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerWorkspaceSymbolProvider(provider: theia.WorkspaceSymbolProvider): theia.Disposable {
-                return languagesExt.registerWorkspaceSymbolProvider(provider);
+                return languagesExt.registerWorkspaceSymbolProvider(provider, pluginToLanguageInfo(plugin));
             },
             registerDocumentFormattingEditProvider(selector: theia.DocumentSelector, provider: theia.DocumentFormattingEditProvider): theia.Disposable {
-                return languagesExt.registerDocumentFormattingEditProvider(selector, provider);
+                return languagesExt.registerDocumentFormattingEditProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerDocumentRangeFormattingEditProvider(selector: theia.DocumentSelector, provider: theia.DocumentRangeFormattingEditProvider): theia.Disposable {
-                return languagesExt.registerDocumentRangeFormattingEditProvider(selector, provider);
+                return languagesExt.registerDocumentRangeFormattingEditProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerOnTypeFormattingEditProvider(
                 selector: theia.DocumentSelector,
@@ -590,31 +590,31 @@ export function createAPIFactory(
                 firstTriggerCharacter: string,
                 ...moreTriggerCharacters: string[]
             ): theia.Disposable {
-                return languagesExt.registerOnTypeFormattingEditProvider(selector, provider, [firstTriggerCharacter].concat(moreTriggerCharacters));
+                return languagesExt.registerOnTypeFormattingEditProvider(selector, provider, [firstTriggerCharacter].concat(moreTriggerCharacters), pluginToLanguageInfo(plugin));
             },
             registerDocumentLinkProvider(selector: theia.DocumentSelector, provider: theia.DocumentLinkProvider): theia.Disposable {
-                return languagesExt.registerLinkProvider(selector, provider);
+                return languagesExt.registerLinkProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerCodeActionsProvider(selector: theia.DocumentSelector, provider: theia.CodeActionProvider, metadata?: theia.CodeActionProviderMetadata): theia.Disposable {
-                return languagesExt.registerCodeActionsProvider(selector, provider, plugin.model, metadata);
+                return languagesExt.registerCodeActionsProvider(selector, provider, plugin.model, pluginToLanguageInfo(plugin), metadata);
             },
             registerCodeLensProvider(selector: theia.DocumentSelector, provider: theia.CodeLensProvider): theia.Disposable {
-                return languagesExt.registerCodeLensProvider(selector, provider);
+                return languagesExt.registerCodeLensProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerReferenceProvider(selector: theia.DocumentSelector, provider: theia.ReferenceProvider): theia.Disposable {
-                return languagesExt.registerReferenceProvider(selector, provider);
+                return languagesExt.registerReferenceProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerDocumentSymbolProvider(selector: theia.DocumentSelector, provider: theia.DocumentSymbolProvider): theia.Disposable {
-                return languagesExt.registerDocumentSymbolProvider(selector, provider);
+                return languagesExt.registerDocumentSymbolProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerColorProvider(selector: theia.DocumentSelector, provider: theia.DocumentColorProvider): theia.Disposable {
-                return languagesExt.registerColorProvider(selector, provider);
+                return languagesExt.registerColorProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerFoldingRangeProvider(selector: theia.DocumentSelector, provider: theia.FoldingRangeProvider): theia.Disposable {
-                return languagesExt.registerFoldingRangeProvider(selector, provider);
+                return languagesExt.registerFoldingRangeProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
             registerRenameProvider(selector: theia.DocumentSelector, provider: theia.RenameProvider): theia.Disposable {
-                return languagesExt.registerRenameProvider(selector, provider);
+                return languagesExt.registerRenameProvider(selector, provider, pluginToLanguageInfo(plugin));
             },
         };
 

@@ -14,17 +14,18 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { interfaces } from 'inversify';
+import { injectable, inject, postConstruct } from 'inversify';
 import { MessageService } from '@theia/core/lib/common/message-service';
-import { MessageRegistryMain, MainMessageType, MainMessageOptions } from '../../common/plugin-api-rpc';
+import { MessageRegistryMain, MainMessageType, MainMessageOptions, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { ModalNotification, MessageType } from './dialogs/modal-notification';
+import { RPCProtocolServiceProvider } from './main-context';
+import { ProxyIdentifier } from '../../common/rpc-protocol';
 
+@injectable()
 export class MessageRegistryMainImpl implements MessageRegistryMain {
-    private readonly messageService: MessageService;
 
-    constructor(container: interfaces.Container) {
-        this.messageService = container.get(MessageService);
-    }
+    @inject(MessageService)
+    private readonly messageService: MessageService;
 
     async $showMessage(type: MainMessageType, message: string, options: MainMessageOptions, actions: string[]): Promise<number | undefined> {
         const action = await this.doShowMessage(type, message, options, actions);
@@ -51,4 +52,22 @@ export class MessageRegistryMainImpl implements MessageRegistryMain {
         throw new Error(`Message type '${type}' is not supported yet!`);
     }
 
+}
+
+@injectable()
+export class MessageRegistryMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(MessageRegistryMainImpl)
+    private readonly messageRegistryMain: MessageRegistryMainImpl;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.MESSAGE_REGISTRY_MAIN;
+        this.class = this.messageRegistryMain;
+    }
 }

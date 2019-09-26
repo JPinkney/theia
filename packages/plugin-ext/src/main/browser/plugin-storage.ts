@@ -14,21 +14,22 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { interfaces } from 'inversify';
-import { StorageMain } from '../../common/plugin-api-rpc';
+import { injectable, inject, postConstruct } from 'inversify';
+import { StorageMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { PluginServer, PluginStorageKind } from '../../common/plugin-protocol';
 import { KeysToAnyValues, KeysToKeysToAnyValue } from '../../common/types';
 import { WorkspaceService } from '@theia/workspace/lib/browser/workspace-service';
+import { RPCProtocolServiceProvider } from './main-context';
+import { ProxyIdentifier } from '../../common/rpc-protocol';
 
+@injectable()
 export class StorageMainImpl implements StorageMain {
 
+    @inject(PluginServer)
     private readonly pluginServer: PluginServer;
-    private readonly workspaceService: WorkspaceService;
 
-    constructor(container: interfaces.Container) {
-        this.pluginServer = container.get(PluginServer);
-        this.workspaceService = container.get(WorkspaceService);
-    }
+    @inject(WorkspaceService)
+    private readonly workspaceService: WorkspaceService;
 
     $set(key: string, value: KeysToAnyValues, isGlobal: boolean): Promise<boolean> {
         return this.pluginServer.setStorageValue(key, value, this.toKind(isGlobal));
@@ -52,4 +53,22 @@ export class StorageMainImpl implements StorageMain {
         };
     }
 
+}
+
+@injectable()
+export class PluginStorageMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(StorageMainImpl)
+    private readonly storageMain: StorageMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.STORAGE_MAIN;
+        this.class = this.storageMain;
+    }
 }

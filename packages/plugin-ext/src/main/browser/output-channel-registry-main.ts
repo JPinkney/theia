@@ -14,11 +14,13 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject } from 'inversify';
+import { injectable, inject, postConstruct } from 'inversify';
 import { OutputWidget } from '@theia/output/lib/browser/output-widget';
 import { OutputContribution } from '@theia/output/lib/browser/output-contribution';
 import { OutputChannel, OutputChannelManager } from '@theia/output/lib/common/output-channel';
-import { OutputChannelRegistryMain, PluginInfo } from '../../common/plugin-api-rpc';
+import { OutputChannelRegistryMain, PLUGIN_RPC_CONTEXT, PluginInfo } from '../../common/plugin-api-rpc';
+import { RPCProtocolServiceProvider } from './main-context';
+import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
 export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain {
@@ -94,5 +96,23 @@ export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain 
         }
 
         return outputChannel;
+    }
+}
+
+@injectable()
+export class OutputChannelRegistryMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(OutputChannelRegistryMainImpl)
+    private readonly outputChannelRegistryMainImpl: OutputChannelRegistryMainImpl;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.OUTPUT_CHANNEL_REGISTRY_MAIN;
+        this.class = this.outputChannelRegistryMainImpl;
     }
 }

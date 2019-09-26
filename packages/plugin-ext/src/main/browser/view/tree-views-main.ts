@@ -14,20 +14,28 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { interfaces } from 'inversify';
-import { MAIN_RPC_CONTEXT, TreeViewsMain, TreeViewsExt } from '../../../common/plugin-api-rpc';
-import { RPCProtocol } from '../../../common/rpc-protocol';
+import { injectable, inject, postConstruct } from 'inversify';
+import { MAIN_RPC_CONTEXT, TreeViewsMain, TreeViewsExt, PLUGIN_RPC_CONTEXT } from '../../../common/plugin-api-rpc';
+import { RPCProtocol, ProxyIdentifier } from '../../../common/rpc-protocol';
 import { PluginViewRegistry, PLUGIN_VIEW_DATA_FACTORY_ID } from './plugin-view-registry';
 import { SelectableTreeNode, ExpandableTreeNode, CompositeTreeNode, WidgetManager } from '@theia/core/lib/browser';
 import { ViewContextKeyService } from './view-context-key-service';
 import { Disposable, DisposableCollection } from '@theia/core';
 import { TreeViewWidget, TreeViewNode } from './tree-view-widget';
+import { RPCProtocolServiceProvider } from '../main-context';
 
+@injectable()
 export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
 
-    private readonly proxy: TreeViewsExt;
+    private proxy: TreeViewsExt;
+
+    @inject(PluginViewRegistry)
     private readonly viewRegistry: PluginViewRegistry;
+
+    @inject(ViewContextKeyService)
     private readonly contextKeys: ViewContextKeyService;
+
+    @inject(WidgetManager)
     private readonly widgetManager: WidgetManager;
 
     private readonly treeViewProviders = new Map<string, Disposable>();
@@ -36,12 +44,12 @@ export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
         Disposable.create(() => { /* mark as not disposed */ })
     );
 
-    constructor(rpc: RPCProtocol, private container: interfaces.Container) {
-        this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.TREE_VIEWS_EXT);
-        this.viewRegistry = container.get(PluginViewRegistry);
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
 
-        this.contextKeys = this.container.get(ViewContextKeyService);
-        this.widgetManager = this.container.get(WidgetManager);
+    @postConstruct()
+    protected init(): void {
+        this.proxy = this.rpc.getProxy(MAIN_RPC_CONTEXT.TREE_VIEWS_EXT);
     }
 
     dispose(): void {
@@ -130,4 +138,22 @@ export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
         this.toDispose.push(treeViewWidget.onDidChangeVisibility(() => updateVisible()));
     }
 
+}
+
+@injectable()
+export class TreeViewsMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(TreeViewsMainImpl)
+    private readonly treeViewsMain: TreeViewsMainImpl;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.TREE_VIEWS_MAIN;
+        this.class = this.treeViewsMain;
+    }
 }

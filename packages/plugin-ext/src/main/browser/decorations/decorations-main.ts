@@ -18,29 +18,36 @@ import {
     DecorationProvider,
     DecorationsExt,
     DecorationsMain,
-    MAIN_RPC_CONTEXT
+    MAIN_RPC_CONTEXT,
+    PLUGIN_RPC_CONTEXT
 } from '../../../common/plugin-api-rpc';
 
-import { interfaces } from 'inversify';
+import { injectable, inject, postConstruct } from 'inversify';
 import { Emitter } from '@theia/core/lib/common/event';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { Tree, TreeDecoration } from '@theia/core/lib/browser';
-import { RPCProtocol } from '../../../common/rpc-protocol';
+import { RPCProtocol, ProxyIdentifier } from '../../../common/rpc-protocol';
 import { ScmDecorationsService } from '@theia/scm/lib/browser/decorations/scm-decorations-service';
+import { RPCProtocolServiceProvider } from '../main-context';
 
+@injectable()
 export class DecorationsMainImpl implements DecorationsMain, Disposable {
 
-    private readonly proxy: DecorationsExt;
+    private proxy: DecorationsExt;
     // TODO: why it is SCM specific? VS Code apis about any decorations for the explorer
+    @inject(ScmDecorationsService)
     private readonly scmDecorationsService: ScmDecorationsService;
 
     protected readonly emitter = new Emitter<(tree: Tree) => Map<string, TreeDecoration.Data>>();
 
     protected readonly toDispose = new DisposableCollection();
 
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.DECORATIONS_EXT);
-        this.scmDecorationsService = container.get(ScmDecorationsService);
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
+
+    @postConstruct()
+    protected init(): void {
+        this.proxy = this.rpc.getProxy(MAIN_RPC_CONTEXT.DECORATIONS_EXT);
     }
 
     dispose(): void {
@@ -75,5 +82,23 @@ export class DecorationsMainImpl implements DecorationsMain, Disposable {
             // TODO: why to make a remote call instead of sending decoration to `$fireDidChangeDecorations` in first place?
             this.proxy.$provideDecoration(id, arg);
         }
+    }
+}
+
+@injectable()
+export class DecorationsMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(DecorationsMainImpl)
+    private readonly decorationsMain: DecorationsMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.DECORATIONS_MAIN;
+        this.class = this.decorationsMain;
     }
 }

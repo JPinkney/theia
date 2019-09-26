@@ -14,20 +14,20 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { interfaces } from 'inversify';
+import { inject, injectable, postConstruct } from 'inversify';
 import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
-import { RPCProtocol } from '../../common/rpc-protocol';
-import { EnvMain } from '../../common/plugin-api-rpc';
+import { EnvMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { QueryParameters } from '../../common/env';
 import { isWindows, isOSX } from '@theia/core';
 import { OperatingSystem } from '../../plugin/types-impl';
+import { RPCProtocolServiceProvider } from './main-context';
+import { ProxyIdentifier } from '../../common/rpc-protocol';
 
+@injectable()
 export class EnvMainImpl implements EnvMain {
-    private envVariableServer: EnvVariablesServer;
 
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.envVariableServer = container.get(EnvVariablesServer);
-    }
+    @inject(EnvVariablesServer)
+    private envVariableServer: EnvVariablesServer;
 
     $getEnvVariable(envVarName: string): Promise<string | undefined> {
         return this.envVariableServer.getValue(envVarName).then(result => result ? result.value : undefined);
@@ -84,4 +84,22 @@ export function getQueryParameters(): QueryParameters {
         }
     }
     return queryParameters;
+}
+
+@injectable()
+export class EnvMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(EnvMainImpl)
+    private readonly envMain: EnvMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.ENV_MAIN;
+        this.class = this.envMain;
+    }
 }

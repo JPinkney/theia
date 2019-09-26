@@ -20,32 +20,42 @@ import {
     SourceControlGroupFeatures,
     ScmMain,
     SourceControlProviderFeatures,
-    SourceControlResourceState
+    SourceControlResourceState,
+    PLUGIN_RPC_CONTEXT
 } from '../../common/plugin-api-rpc';
 import { ScmProvider, ScmResource, ScmResourceDecorations, ScmResourceGroup, ScmCommand } from '@theia/scm/lib/browser/scm-provider';
 import { ScmRepository } from '@theia/scm/lib/browser/scm-repository';
 import { ScmService } from '@theia/scm/lib/browser/scm-service';
-import { RPCProtocol } from '../../common/rpc-protocol';
-import { interfaces } from 'inversify';
+import { RPCProtocol, ProxyIdentifier } from '../../common/rpc-protocol';
+import { injectable, inject, postConstruct } from 'inversify';
 import { Emitter, Event } from '@theia/core/lib/common/event';
 import { CancellationToken } from '@theia/core/lib/common/cancellation';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import URI from '@theia/core/lib/common/uri';
 import { ColorRegistry } from '@theia/core/lib/browser/color-registry';
+import { RPCProtocolServiceProvider } from './main-context';
 
+@injectable()
 export class ScmMainImpl implements ScmMain, Disposable {
-    private readonly proxy: ScmExt;
+    private proxy: ScmExt;
+
+    @inject(ScmService)
     private readonly scmService: ScmService;
     private readonly scmRepositoryMap = new Map<number, ScmRepository>();
+
+    @inject(ColorRegistry)
     private readonly colors: ColorRegistry;
+
     private lastSelectedSourceControlHandle: number | undefined;
 
     private readonly toDispose = new DisposableCollection();
 
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.SCM_EXT);
-        this.scmService = container.get(ScmService);
-        this.colors = container.get(ColorRegistry);
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
+
+    @postConstruct()
+    protected init(): void {
+        this.proxy = this.rpc.getProxy(MAIN_RPC_CONTEXT.SCM_EXT);
         this.toDispose.push(this.scmService.onDidChangeSelectedRepository(repository => this.updateSelectedRepository(repository)));
     }
 
@@ -377,5 +387,23 @@ export class PluginScmResource implements ScmResource {
 
     open(): Promise<void> {
         return this.proxy.$executeResourceCommand(this.group.provider.handle, this.group.handle, this.handle);
+    }
+}
+
+@injectable()
+export class ScmMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(ScmMainImpl)
+    private readonly scmMain: ScmMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.SCM_MAIN;
+        this.class = this.scmMain;
     }
 }

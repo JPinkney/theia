@@ -19,36 +19,47 @@ import {
     MAIN_RPC_CONTEXT,
     TaskExecutionDto,
     TasksExt,
-    TaskDto
+    TaskDto,
+    PLUGIN_RPC_CONTEXT
 } from '../../common/plugin-api-rpc';
-import { RPCProtocol } from '../../common/rpc-protocol';
+import { RPCProtocol, ProxyIdentifier } from '../../common/rpc-protocol';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common';
 import { TaskProviderRegistry, TaskResolverRegistry, TaskProvider, TaskResolver } from '@theia/task/lib/browser/task-contribution';
-import { interfaces } from 'inversify';
+import { injectable, inject, postConstruct } from 'inversify';
 import { TaskInfo, TaskExitedEvent, TaskConfiguration } from '@theia/task/lib/common/task-protocol';
 import { TaskWatcher } from '@theia/task/lib/common/task-watcher';
 import { TaskService } from '@theia/task/lib/browser/task-service';
 import { TaskDefinitionRegistry } from '@theia/task/lib/browser';
+import { RPCProtocolServiceProvider } from './main-context';
 
+@injectable()
 export class TasksMainImpl implements TasksMain, Disposable {
-    private readonly proxy: TasksExt;
+    private proxy: TasksExt;
+
+    @inject(TaskProviderRegistry)
     private readonly taskProviderRegistry: TaskProviderRegistry;
+
+    @inject(TaskResolverRegistry)
     private readonly taskResolverRegistry: TaskResolverRegistry;
+
+    @inject(TaskWatcher)
     private readonly taskWatcher: TaskWatcher;
+
+    @inject(TaskService)
     private readonly taskService: TaskService;
+
+    @inject(TaskDefinitionRegistry)
     private readonly taskDefinitionRegistry: TaskDefinitionRegistry;
+
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
 
     private readonly taskProviders = new Map<number, Disposable>();
     private readonly toDispose = new DisposableCollection();
 
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.TASKS_EXT);
-        this.taskProviderRegistry = container.get(TaskProviderRegistry);
-        this.taskResolverRegistry = container.get(TaskResolverRegistry);
-        this.taskWatcher = container.get(TaskWatcher);
-        this.taskService = container.get(TaskService);
-        this.taskDefinitionRegistry = container.get(TaskDefinitionRegistry);
-
+    @postConstruct()
+    protected init(): void {
+        this.proxy = this.rpc.getProxy(MAIN_RPC_CONTEXT.TASKS_EXT);
         this.toDispose.push(this.taskWatcher.onTaskCreated((event: TaskInfo) => {
             this.proxy.$onDidStartTask({
                 id: event.taskId,
@@ -194,5 +205,23 @@ export class TasksMainImpl implements TasksMain, Disposable {
             _source: taskDto.source || 'plugin',
             _scope: taskDto.scope
         });
+    }
+}
+
+@injectable()
+export class TasksMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(TasksMainImpl)
+    private readonly tasksMain: TasksMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.TASKS_MAIN;
+        this.class = this.tasksMain;
     }
 }

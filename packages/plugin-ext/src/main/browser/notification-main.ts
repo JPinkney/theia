@@ -14,25 +14,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { NotificationMain } from '../../common/plugin-api-rpc';
+import { NotificationMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { ProgressService, Progress, ProgressMessage } from '@theia/core/lib/common';
-import { interfaces } from 'inversify';
-import { RPCProtocol } from '../../common/rpc-protocol';
+import { inject, injectable, postConstruct } from 'inversify';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
+import { RPCProtocolServiceProvider } from './main-context';
+import { ProxyIdentifier } from '../../common/rpc-protocol';
 
+@injectable()
 export class NotificationMainImpl implements NotificationMain, Disposable {
 
+    @inject(ProgressService)
     private readonly progressService: ProgressService;
+
     private readonly progressMap = new Map<string, Progress>();
     private readonly progress2Work = new Map<string, number>();
 
     protected readonly toDispose = new DisposableCollection(
         Disposable.create(() => { /* mark as not disposed */ })
     );
-
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.progressService = container.get(ProgressService);
-    }
 
     dispose(): void {
         this.toDispose.dispose();
@@ -73,5 +73,23 @@ export class NotificationMainImpl implements NotificationMain, Disposable {
         const done = Math.min((this.progress2Work.get(id) || 0) + (item.increment || 0), 100);
         this.progress2Work.set(id, done);
         progress.report({ message: item.message, work: done ? { done, total: 100 } : undefined });
+    }
+}
+
+@injectable()
+export class NotificationMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(NotificationMainImpl)
+    private readonly notificationMain: NotificationMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.NOTIFICATION_MAIN;
+        this.class = this.notificationMain;
     }
 }

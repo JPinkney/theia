@@ -16,29 +16,34 @@
 
 import URI from 'vscode-uri';
 import CoreURI from '@theia/core/lib/common/uri';
-import { interfaces } from 'inversify';
-import { WindowStateExt, MAIN_RPC_CONTEXT, WindowMain } from '../../common/plugin-api-rpc';
-import { RPCProtocol } from '../../common/rpc-protocol';
-import { UriComponents } from '../../common/uri-components';
-import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { open, OpenerService } from '@theia/core/lib/browser/opener-service';
 import { ExternalUriService } from '@theia/core/lib/browser/external-uri-service';
+import { injectable, inject, postConstruct } from 'inversify';
+import { WindowStateExt, MAIN_RPC_CONTEXT, WindowMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
+import { RPCProtocol, ProxyIdentifier } from '../../common/rpc-protocol';
+import { UriComponents } from '../../common/uri-components';
+import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
+import { RPCProtocolServiceProvider } from './main-context';
 
+@injectable()
 export class WindowStateMain implements WindowMain, Disposable {
 
-    private readonly proxy: WindowStateExt;
+    private proxy: WindowStateExt;
 
+    @inject(OpenerService)
     private readonly openerService: OpenerService;
 
+    @inject(ExternalUriService)
     private readonly externalUriService: ExternalUriService;
 
     private readonly toDispose = new DisposableCollection();
 
-    constructor(rpc: RPCProtocol, container: interfaces.Container) {
-        this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.WINDOW_STATE_EXT);
-        this.openerService = container.get(OpenerService);
-        this.externalUriService = container.get(ExternalUriService);
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
 
+    @postConstruct()
+    protected init(): void {
+        this.proxy = this.rpc.getProxy(MAIN_RPC_CONTEXT.WINDOW_STATE_EXT);
         const fireDidFocus = () => this.onFocusChanged(true);
         window.addEventListener('focus', fireDidFocus);
         this.toDispose.push(Disposable.create(() => window.removeEventListener('focus', fireDidFocus)));
@@ -73,4 +78,22 @@ export class WindowStateMain implements WindowMain, Disposable {
         return URI.parse(resolved.toString());
     }
 
+}
+
+@injectable()
+export class WindowStateMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(WindowStateMain)
+    private readonly windowStateMain: WindowMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.WINDOW_MAIN;
+        this.class = this.windowStateMain;
+    }
 }

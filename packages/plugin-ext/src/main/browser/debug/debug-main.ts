@@ -16,12 +16,13 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { interfaces } from 'inversify';
-import { RPCProtocol } from '../../../common/rpc-protocol';
+import { injectable, inject, postConstruct } from 'inversify';
+import { RPCProtocol, ProxyIdentifier } from '../../../common/rpc-protocol';
 import {
     DebugMain,
     DebugExt,
-    MAIN_RPC_CONTEXT
+    MAIN_RPC_CONTEXT,
+    PLUGIN_RPC_CONTEXT
 } from '../../../common/plugin-api-rpc';
 import { DebugSessionManager } from '@theia/debug/lib/browser/debug-session-manager';
 import { Breakpoint, WorkspaceFolder } from '../../../common/plugin-api-rpc-model';
@@ -46,49 +47,70 @@ import { PluginDebugSessionContributionRegistrator, PluginDebugSessionContributi
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { PluginDebugSessionFactory } from './plugin-debug-session-factory';
 import { PluginWebSocketChannel } from '../../../common/connection';
-import { PluginDebugAdapterContributionRegistrator, PluginDebugService } from './plugin-debug-service';
+import { PluginDebugService } from './plugin-debug-service';
 import { FileSystem } from '@theia/filesystem/lib/common';
 import { HostedPluginSupport } from '../../../hosted/browser/hosted-plugin';
 import { DebugFunctionBreakpoint } from '@theia/debug/lib/browser/model/debug-function-breakpoint';
+import { RPCProtocolServiceProvider } from '../main-context';
 
+@injectable()
 export class DebugMainImpl implements DebugMain, Disposable {
-    private readonly debugExt: DebugExt;
+    private debugExt: DebugExt;
 
+    @inject(DebugSessionManager)
     private readonly sessionManager: DebugSessionManager;
+
+    @inject(LabelProvider)
     private readonly labelProvider: LabelProvider;
+
+    @inject(EditorManager)
     private readonly editorManager: EditorManager;
+
+    @inject(BreakpointManager)
     private readonly breakpointsManager: BreakpointManager;
+
+    @inject(DebugConsoleSession)
     private readonly debugConsoleSession: DebugConsoleSession;
+
+    @inject(DebugConfigurationManager)
     private readonly configurationManager: DebugConfigurationManager;
+
+    @inject(TerminalService)
     private readonly terminalService: TerminalService;
+
+    @inject(MessageClient)
     private readonly messages: MessageClient;
+
+    @inject(OutputChannelManager)
     private readonly outputChannelManager: OutputChannelManager;
+
+    @inject(DebugPreferences)
     private readonly debugPreferences: DebugPreferences;
+
+    @inject(PluginDebugSessionContributionRegistry)
     private readonly sessionContributionRegistrator: PluginDebugSessionContributionRegistrator;
-    private readonly adapterContributionRegistrator: PluginDebugAdapterContributionRegistrator;
+
+    @inject(PluginDebugService)
+    private readonly adapterContributionRegistrator: PluginDebugService;
+
+    @inject(FileSystem)
     private readonly fileSystem: FileSystem;
+
+    @inject(HostedPluginSupport)
     private readonly pluginService: HostedPluginSupport;
+
+    @inject(ConnectionMainImpl)
+    private readonly connectionMain: ConnectionMainImpl;
+
+    @inject(RPCProtocol)
+    private readonly rpc: RPCProtocol;
 
     private readonly debuggerContributions = new Map<string, DisposableCollection>();
     private readonly toDispose = new DisposableCollection();
 
-    constructor(rpc: RPCProtocol, readonly connectionMain: ConnectionMainImpl, container: interfaces.Container) {
-        this.debugExt = rpc.getProxy(MAIN_RPC_CONTEXT.DEBUG_EXT);
-        this.sessionManager = container.get(DebugSessionManager);
-        this.labelProvider = container.get(LabelProvider);
-        this.editorManager = container.get(EditorManager);
-        this.breakpointsManager = container.get(BreakpointManager);
-        this.debugConsoleSession = container.get(DebugConsoleSession);
-        this.configurationManager = container.get(DebugConfigurationManager);
-        this.terminalService = container.get(TerminalService);
-        this.messages = container.get(MessageClient);
-        this.outputChannelManager = container.get(OutputChannelManager);
-        this.debugPreferences = container.get(DebugPreferences);
-        this.adapterContributionRegistrator = container.get(PluginDebugService);
-        this.sessionContributionRegistrator = container.get(PluginDebugSessionContributionRegistry);
-        this.fileSystem = container.get(FileSystem);
-        this.pluginService = container.get(HostedPluginSupport);
-
+    @postConstruct()
+    protected init(): void {
+        this.debugExt = this.rpc.getProxy(MAIN_RPC_CONTEXT.DEBUG_EXT);
         const fireDidChangeBreakpoints = ({ added, removed, changed }: BreakpointsChangeEvent<SourceBreakpoint | FunctionBreakpoint>) => {
             this.debugExt.$breakpointsDidChange(
                 this.toTheiaPluginApiBreakpoints(added),
@@ -300,5 +322,23 @@ export class DebugMainImpl implements DebugMain, Disposable {
             enabled: breakpoint.enabled,
             functionName: breakpoint.raw.name
         };
+    }
+}
+
+@injectable()
+export class DebugMainServiceProvider implements RPCProtocolServiceProvider {
+
+    // tslint:disable-next-line:no-any
+    identifier: ProxyIdentifier<any>;
+    // tslint:disable-next-line:no-any
+    class: any;
+
+    @inject(DebugMainImpl)
+    private readonly debugMain: DebugMain;
+
+    @postConstruct()
+    protected init(): void {
+        this.identifier = PLUGIN_RPC_CONTEXT.DEBUG_MAIN;
+        this.class = this.debugMain;
     }
 }

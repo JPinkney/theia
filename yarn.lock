@@ -11122,6 +11122,11 @@ vscode-jsonrpc@^4.1.0-next, vscode-jsonrpc@^4.1.0-next.3:
   resolved "https://registry.yarnpkg.com/vscode-jsonrpc/-/vscode-jsonrpc-4.1.0-next.3.tgz#05fe742959a2726020d4d0bfbc3d3c97873c7fde"
   integrity sha512-Z6oxBiMks2+UADV1QHXVooSakjyhI+eHTnXzDyVvVMmegvSfkXk2w6mPEdSkaNHFBdtWW7n20H1yw2nA3A17mg==
 
+vscode-jsonrpc@^5.0.0-next.2:
+  version "5.0.0-next.2"
+  resolved "https://registry.yarnpkg.com/vscode-jsonrpc/-/vscode-jsonrpc-5.0.0-next.2.tgz#a44bc03f67069e53f8d8beb88b96c0cacbfefbca"
+  integrity sha512-Q3/jabZUNviCG9hhF6hHWjhrABevPF9mv0aiE2j8BYCAP2k+aHTpjMyk+04MzaAqWYwXdQuZkLSbcYCCqbzJLg==
+
 vscode-languageclient@^5.3.0-next:
   version "5.3.0-next.6"
   resolved "https://registry.yarnpkg.com/vscode-languageclient/-/vscode-languageclient-5.3.0-next.6.tgz#35e74882781158e8b111911c0953869d3df08777"
@@ -11129,6 +11134,14 @@ vscode-languageclient@^5.3.0-next:
   dependencies:
     semver "^5.5.0"
     vscode-languageserver-protocol "^3.15.0-next.6"
+
+vscode-languageserver-protocol@^3.15.0-next:
+  version "3.15.0-next.9"
+  resolved "https://registry.yarnpkg.com/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.15.0-next.9.tgz#e768256bd5b580b25bfbc8099bc03bc4c42ebf30"
+  integrity sha512-b9PAxouMmtsLEe8ZjbIMPb7wRWPhckGfgjwZLmp/dWnaAuRPYtY3lGO0/rNbLc3jKIqCVlnEyYVFKalzDAzj0g==
+  dependencies:
+    vscode-jsonrpc "^5.0.0-next.2"
+    vscode-languageserver-types "^3.15.0-next.5"
 
 vscode-languageserver-protocol@^3.15.0-next.6, vscode-languageserver-protocol@^3.15.0-next.8:
   version "3.15.0-next.8"
@@ -11142,6 +11155,11 @@ vscode-languageserver-types@^3.15.0-next, vscode-languageserver-types@^3.15.0-ne
   version "3.15.0-next.4"
   resolved "https://registry.yarnpkg.com/vscode-languageserver-types/-/vscode-languageserver-types-3.15.0-next.4.tgz#9aae49844ef826ae656382facecc20664113c060"
   integrity sha512-IKIWTdUPBnOtwznIrhxKnjVZ7hYxEzwZ3M2xmDi7OjjexuOM6LnGtoo1Dv4wYSik4epK4STEib6e8da2GxUsJA==
+
+vscode-languageserver-types@^3.15.0-next.5:
+  version "3.15.0-next.5"
+  resolved "https://registry.yarnpkg.com/vscode-languageserver-types/-/vscode-languageserver-types-3.15.0-next.5.tgz#863d711bf47b338ff5e63ae19fb20d4fcd4d713b"
+  integrity sha512-7hrELhTeWieUgex3+6692KjCkcmO/+V/bFItM5MHGcBotzwmjEuXjapLLYTYhIspuJ1ibRSik5MhX5YwLpsPiw==
 
 vscode-languageserver@^5.3.0-next:
   version "5.3.0-next.10"

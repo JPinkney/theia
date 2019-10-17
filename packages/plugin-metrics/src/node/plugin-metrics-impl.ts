@@ -14,14 +14,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-/**
- * The JSON-RPC workspace interface for plugin metrics
- */
-export const metricsJsonRpcPath = '/services/plugin-ext/metrics';
-export const PluginMetrics = Symbol('PluginMetrics');
-export interface PluginMetrics {
-    setMetrics(metrics: string): void;
-    getMetrics(): string;
-}
+import { injectable } from 'inversify';
+import { PluginMetrics } from '../common/metrics-protocol';
 
-export const METRICS_TIMEOUT = 10000;
+@injectable()
+export class PluginMetricsImpl implements PluginMetrics {
+
+    private metrics: string = '{}';
+
+    // tslint:disable-next-line:typedef
+    setMetrics(metrics: string) {
+        this.metrics = metrics;
+    }
+
+    /**
+     * This sends all the information about metrics inside of the plugins to the backend
+     * where it is served on the /metrics endpoint
+     */
+    getMetrics(): string {
+        return this.metrics;
+    }
+
+}

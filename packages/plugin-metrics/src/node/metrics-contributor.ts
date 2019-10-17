@@ -16,10 +16,10 @@
 
 import { PluginMetrics } from '../common/metrics-protocol';
 import { injectable } from 'inversify';
-import { AnalyticsFromRequests, MetricsMap } from '../common/plugin-metrics-interfaces';
+import { AnalyticsFromRequests, MetricsMap } from '../common/plugin-metrics-types';
 
 @injectable()
-export class MetricsContributor {
+export class PluginMetricsContributor {
     clients: Set<PluginMetrics> = new Set();
 
     reconcile(): MetricsMap {

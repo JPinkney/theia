@@ -14,20 +14,18 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { MetricOutput, AnalyticsFromRequests } from '../../common/plugin-metrics-interfaces';
+import { MetricOutput, AnalyticsFromRequests } from '../../common/plugin-metrics-types';
 import { injectable } from 'inversify';
 
 @injectable()
-export class PluginMetricSuccessOutput implements MetricOutput {
+export class PluginMetricTimeOutput implements MetricOutput {
 
-    public header = '# HELP language_server_success_metrics Percentage of successful language requests\n# TYPE language_server_success_metrics gauge\n';
+    public header =
+        '# HELP language_server_time_metrics Number of milliseconds it takes on average for a language server request\n# TYPE language_server_time_metrics gauge\n';
 
     createMetricOutput(id: string, method: string, requestAnalytics: AnalyticsFromRequests): string {
-        if (requestAnalytics.succesfulResponses < 0) {
-            requestAnalytics.succesfulResponses = 0;
-        }
-        const percentageOfSuccess = ((requestAnalytics.succesfulResponses / requestAnalytics.totalRequests) * 100);
-        return `language_server_success_metrics{id="${id}" method="${method}"} ${percentageOfSuccess}\n`;
+        const avgTime = requestAnalytics.avgTimeTaken;
+        return `language_server_time_metrics{id="${id}" method="${method}"} ${avgTime}\n`;
     }
 
 }

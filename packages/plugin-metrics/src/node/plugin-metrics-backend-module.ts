@@ -17,23 +17,23 @@
 import { MetricsContribution } from '@theia/metrics/lib/node/metrics-contribution';
 import { PluginMetricsContribution } from './plugin-metrics';
 import { PluginMetrics, metricsJsonRpcPath } from '../common/metrics-protocol';
-import { PluginMetricsHandler } from './plugin-metrics-handler';
+import { PluginMetricsImpl } from './plugin-metrics-impl';
 import { ConnectionHandler } from '@theia/core/lib/common/messaging/handler';
 import { JsonRpcConnectionHandler } from '@theia/core';
 import { ContainerModule } from 'inversify';
-import { MetricsContributor } from './metrics-contributor';
+import { PluginMetricsContributor } from './metrics-contributor';
 import { PluginMetricTimeOutput } from './metric-output/plugin-metrics-time-output';
 import { PluginMetricSuccessOutput } from './metric-output/plugin-metrics-success-output';
-import { MetricStringGenerator } from './metric-string-generator';
+import { PluginMetricStringGenerator } from './metric-string-generator';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(PluginMetricTimeOutput).toSelf().inSingletonScope();
     bind(PluginMetricSuccessOutput).toSelf().inSingletonScope();
-    bind(PluginMetrics).to(PluginMetricsHandler).inTransientScope();
-    bind(MetricStringGenerator).toSelf().inSingletonScope();
-    bind(MetricsContributor).toSelf().inSingletonScope();
+    bind(PluginMetrics).to(PluginMetricsImpl).inTransientScope();
+    bind(PluginMetricStringGenerator).toSelf().inSingletonScope();
+    bind(PluginMetricsContributor).toSelf().inSingletonScope();
     bind(ConnectionHandler).toDynamicValue(ctx => {
-        const clients = ctx.container.get(MetricsContributor);
+        const clients = ctx.container.get(PluginMetricsContributor);
         return new JsonRpcConnectionHandler(metricsJsonRpcPath, client => {
             const pluginMetricsHandler: PluginMetrics = ctx.container.get(PluginMetrics);
             clients.clients.add(pluginMetricsHandler);

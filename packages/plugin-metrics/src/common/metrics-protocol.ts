@@ -14,18 +14,14 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { MetricOutput, AnalyticsFromRequests } from '../../common/plugin-metrics-interfaces';
-import { injectable } from 'inversify';
-
-@injectable()
-export class PluginMetricTimeOutput implements MetricOutput {
-
-    public header =
-        '# HELP language_server_time_metrics Number of milliseconds it takes on average for a language server request\n# TYPE language_server_time_metrics gauge\n';
-
-    createMetricOutput(id: string, method: string, requestAnalytics: AnalyticsFromRequests): string {
-        const avgTime = requestAnalytics.avgTimeTaken;
-        return `language_server_time_metrics{id="${id}" method="${method}"} ${avgTime}\n`;
-    }
-
+/**
+ * The JSON-RPC interface for plugin metrics
+ */
+export const metricsJsonRpcPath = '/services/plugin-ext/metrics';
+export const PluginMetrics = Symbol('PluginMetrics');
+export interface PluginMetrics {
+    setMetrics(metrics: string): void;
+    getMetrics(): string;
 }
+
+export const METRICS_TIMEOUT = 10000;

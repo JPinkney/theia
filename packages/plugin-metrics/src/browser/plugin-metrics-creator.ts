@@ -16,7 +16,7 @@
 
 import { inject, injectable } from 'inversify';
 import { PluginMetrics, METRICS_TIMEOUT } from '../common/metrics-protocol';
-import { AnalyticsFromRequests, DataFromRequest, createRequestData, createDefaultAnalytics, MetricsMap } from '../common/plugin-metrics-interfaces';
+import { AnalyticsFromRequests, DataFromRequest, createRequestData, createDefaultAnalytics, MetricsMap } from '../common/plugin-metrics-types';
 
 @injectable()
 export class PluginMetricsCreator {

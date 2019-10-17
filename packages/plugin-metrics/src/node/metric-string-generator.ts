@@ -15,11 +15,11 @@
  ********************************************************************************/
 import { PluginMetricSuccessOutput } from './metric-output/plugin-metrics-success-output';
 import { PluginMetricTimeOutput } from './metric-output/plugin-metrics-time-output';
-import { MetricsMap } from '../common/plugin-metrics-interfaces';
+import { MetricsMap } from '../common/plugin-metrics-types';
 import { injectable, inject } from 'inversify';
 
 @injectable()
-export class MetricStringGenerator {
+export class PluginMetricStringGenerator {
 
     @inject(PluginMetricSuccessOutput)
     private pluginMetricsSuccessOutput: PluginMetricSuccessOutput;

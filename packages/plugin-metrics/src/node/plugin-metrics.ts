@@ -14,25 +14,31 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable } from 'inversify';
-import { PluginMetrics } from '../common/metrics-protocol';
+import { injectable, inject } from 'inversify';
+import { MetricsContribution } from '@theia/metrics/lib/node/metrics-contribution';
+import { METRICS_TIMEOUT } from '../common/metrics-protocol';
+import { PluginMetricsContributor } from './metrics-contributor';
+import { PluginMetricStringGenerator } from './metric-string-generator';
 
 @injectable()
-export class PluginMetricsHandler implements PluginMetrics {
+export class PluginMetricsContribution implements MetricsContribution {
 
-    private metrics: string = '{}';
+    @inject(PluginMetricsContributor)
+    protected readonly metricsContributor: PluginMetricsContributor;
 
-    // tslint:disable-next-line:typedef
-    setMetrics(metrics: string) {
-        this.metrics = metrics;
-    }
+    @inject(PluginMetricStringGenerator)
+    protected readonly stringGenerator: PluginMetricStringGenerator;
 
-    /**
-     * This sends all the information about metrics inside of the plugins to the backend
-     * where it is served on the /metrics endpoint
-     */
+    private metrics: string;
+
     getMetrics(): string {
         return this.metrics;
     }
 
+    startCollecting(): void {
+        setInterval(() => {
+            const reconciledMetrics = this.metricsContributor.reconcile();
+            this.metrics = this.stringGenerator.getMetricsString(reconciledMetrics);
+        }, METRICS_TIMEOUT);
+    }
 }

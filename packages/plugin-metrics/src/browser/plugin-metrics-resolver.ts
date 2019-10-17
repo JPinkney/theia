@@ -18,7 +18,7 @@
 
 import { injectable, inject } from 'inversify';
 import { PluginMetricsCreator } from './plugin-metrics-creator';
-import { createRequestData } from '../common/plugin-metrics-interfaces';
+import { createRequestData } from '../common/plugin-metrics-types';
 
 /**
  * This class helps resolve language server requests into successess or failures
@@ -40,26 +40,13 @@ export class PluginMetricsResolver {
      */
     async resolveRequest(pluginID: string, method: string, request: PromiseLike<any> | Promise<any> | Thenable<any> | any): Promise<any> {
         const currentTime = performance.now();
-        if (isPromise(request)) {
-            return request.catch(error => {
-                this.createAndSetMetric(pluginID, method, performance.now() - currentTime, false);
-                return Promise.reject(error);
-            }).then(value => {
-                this.createAndSetMetric(pluginID, method, performance.now() - currentTime, true);
-                return value;
-            });
-        } else if (isPromiseLike(request)) {
-            return request.then(value => {
-                this.createAndSetMetric(pluginID, method, performance.now() - currentTime, true);
-                return value;
-            },
-                error => {
-                    this.createAndSetMetric(pluginID, method, performance.now() - currentTime, false);
-                    return Promise.reject(error);
-                });
-        } else {
+        try {
+            const value = await request;
             this.createAndSetMetric(pluginID, method, performance.now() - currentTime, true);
-            return request;
+            return value;
+        } catch (error) {
+            this.createAndSetMetric(pluginID, method, performance.now() - currentTime, false);
+            return Promise.reject(error);
         }
     }
 
@@ -67,12 +54,4 @@ export class PluginMetricsResolver {
         const createdSuccessMetric = createRequestData(pluginID, method, time);
         this.metricsCreator.createMetric(createdSuccessMetric, successful);
     }
-}
-
-function isPromise(potentialPromise: any): potentialPromise is Promise<any> {
-    return (<Promise<any>>potentialPromise).then !== undefined;
-}
-
-function isPromiseLike(potentialPromiseLike: any): potentialPromiseLike is PromiseLike<any> {
-    return (<PromiseLike<any>>potentialPromiseLike).then !== undefined;
 }

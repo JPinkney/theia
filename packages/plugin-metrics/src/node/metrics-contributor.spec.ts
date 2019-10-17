@@ -14,10 +14,10 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { AnalyticsFromRequests } from '../common/plugin-metrics-interfaces';
-import { MetricsContributor } from './metrics-contributor';
+import { AnalyticsFromRequests } from '../common/plugin-metrics-types';
+import { PluginMetricsContributor } from './metrics-contributor';
 import { Container, ContainerModule } from 'inversify';
-import { PluginMetricsHandler } from './plugin-metrics-handler';
+import { PluginMetricsImpl } from './plugin-metrics-impl';
 import { PluginMetrics } from '../common/metrics-protocol';
 import * as assert from 'assert';
 
@@ -27,8 +27,8 @@ describe('Metrics contributor:', () => {
         testContainer = new Container();
 
         const module = new ContainerModule(bind => {
-            bind(PluginMetrics).to(PluginMetricsHandler).inTransientScope();
-            bind(MetricsContributor).toSelf().inTransientScope();
+            bind(PluginMetrics).to(PluginMetricsImpl).inTransientScope();
+            bind(PluginMetricsContributor).toSelf().inTransientScope();
         });
 
         testContainer.load(module);
@@ -51,7 +51,7 @@ describe('Metrics contributor:', () => {
                 }
             };
 
-            const metricsContributor = testContainer.get(MetricsContributor);
+            const metricsContributor = testContainer.get(PluginMetricsContributor);
             const pluginMetrics = testContainer.get(PluginMetrics) as PluginMetrics;
             pluginMetrics.setMetrics(JSON.stringify(metricsMap));
             metricsContributor.clients.add(pluginMetrics);
@@ -91,7 +91,7 @@ describe('Metrics contributor:', () => {
                     [firstClientMetricMethod]: secondClientAnalytics
                 }
             };
-            const metricsContributor = testContainer.get(MetricsContributor);
+            const metricsContributor = testContainer.get(PluginMetricsContributor);
             const firstClientPluginMetric = testContainer.get(PluginMetrics) as PluginMetrics;
             firstClientPluginMetric.setMetrics(JSON.stringify(firstClientMetricsMap));
             metricsContributor.clients.add(firstClientPluginMetric);
@@ -147,7 +147,7 @@ describe('Metrics contributor:', () => {
                     [firstClientMetricMethod]: secondClientAnalytics
                 }
             };
-            const metricsContributor = testContainer.get(MetricsContributor);
+            const metricsContributor = testContainer.get(PluginMetricsContributor);
             const firstClientPluginMetric = testContainer.get(PluginMetrics) as PluginMetrics;
             firstClientPluginMetric.setMetrics(JSON.stringify(firstClientMetricsMap));
             metricsContributor.clients.add(firstClientPluginMetric);
@@ -199,7 +199,7 @@ describe('Metrics contributor:', () => {
                     [secondClientMetricMethod]: secondClientAnalytics
                 }
             };
-            const metricsContributor = testContainer.get(MetricsContributor);
+            const metricsContributor = testContainer.get(PluginMetricsContributor);
             const firstClientPluginMetric = testContainer.get(PluginMetrics) as PluginMetrics;
             firstClientPluginMetric.setMetrics(JSON.stringify(firstClientMetricsMap));
             metricsContributor.clients.add(firstClientPluginMetric);

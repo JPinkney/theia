@@ -29,7 +29,7 @@
     "istanbul-instrumenter-loader": "^3.0.1",
     "jsdom": "^11.5.1",
     "lerna": "^2.2.0",
-    "mocha": "^3.4.2",
+    "mocha": "^6.2.2",
     "nyc": "^11.0.3",
     "remap-istanbul": "^0.9.5",
     "rimraf": "^2.6.1",
@@ -76,5 +76,8 @@
     "dev-packages/*",
     "packages/*",
     "examples/*"
-  ]
+  ],
+  "dependencies": {
+    "glob": "^7.1.6"
+  }
 }

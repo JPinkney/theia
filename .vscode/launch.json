@@ -160,13 +160,14 @@
       "request": "launch",
       "args": [
         "${workspaceFolder}/examples/browser/src-gen/backend/main.js",
-        "${workspaceFolder}/plugins/vscode-api-tests/testWorkspace",
+        "${workspaceFolder}/plugins/java-tests",
         "--port",
         "3030",
         "--hostname",
         "0.0.0.0",
-        "--extensionTestsPath=${workspaceFolder}/plugins/vscode-api-tests/out/singlefolder-tests",
-        "--hosted-plugin-inspect=9339"
+        // "--extensionTestsPath=${workspaceFolder}/plugins/api-test-loader/out/singlefolder-tests",
+        "--hosted-plugin-inspect=9339",
+        "--inspect=3123"
       ],
       "env": {
         "THEIA_DEFAULT_PLUGINS": "local-dir:${workspaceFolder}/plugins",
@@ -177,6 +178,33 @@
       "outFiles": [
         "${workspaceFolder}/../.js"
       ]
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach",
+      "port": 3123
+    },
+    {
+      "name": "Launch VS Code extension",
+      "type": "node",
+      "request": "launch",
+      "port": 9340,
+      "timeout": 100000,
+      "args": [
+        "${workspaceFolder}/examples/browser/src-gen/backend/main.js",
+        "${workspaceFolder}",
+        "--port=3031",
+        "--hosted-plugin-inspect=9340",
+        "--plugins=local-dir:${workspaceFolder}/plugins"
+      ],
+      "stopOnEntry": false,
+      "sourceMaps": true,
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ],
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std"
     }
   ],
   "compounds": [
@@ -185,6 +213,13 @@
       "configurations": [
         "Launch Electron Backend",
         "Attach to Electron Frontend"
+      ]
+    },
+    {
+      "name": "Launch tests and plugin host",
+      "configurations": [
+        "Launch VS Code Tests",
+        "Attach to Plugin Host"
       ]
     }
   ]

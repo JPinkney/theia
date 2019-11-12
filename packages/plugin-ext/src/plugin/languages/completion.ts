@@ -45,6 +45,10 @@ export class CompletionAdapter {
         const doc = document.document;
 
         const pos = Converter.toPosition(position);
+        console.log(doc);
+        console.log(pos);
+        console.log(token);
+        console.log(context);
         return Promise.resolve(this.delegate.provideCompletionItems(doc, pos, token, context)).then(value => {
             const id = this.cacheId++;
 

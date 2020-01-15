@@ -371,7 +371,7 @@ export class LanguagesMainImpl implements LanguagesMain, Disposable {
         return {
             links: links.map(link => this.toMonacoLink(link)),
             dispose: () => {
-                // TODO this.proxy.$releaseDocumentLinks(handle, links.cacheId);
+                this.proxy.$releaseDocumentLinks(handle, links.cacheId);
             }
         };
     }
@@ -418,7 +418,7 @@ export class LanguagesMainImpl implements LanguagesMain, Disposable {
         return {
             lenses,
             dispose: () => {
-                // TODO this.proxy.$releaseCodeLenses
+                this.proxy.$releaseCodeLenses()
             }
         };
     }
@@ -681,7 +681,7 @@ export class LanguagesMainImpl implements LanguagesMain, Disposable {
         return {
             actions: actions.map(a => toMonacoAction(a)),
             dispose: () => {
-                // TODO this.proxy.$releaseCodeActions(handle, cacheId);
+                this.proxy.$releaseCodeActions(handle, cacheId);
             }
         };
     }

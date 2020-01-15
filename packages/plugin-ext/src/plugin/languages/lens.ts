@@ -89,4 +89,13 @@ export class CodeLensAdapter {
         symbol.command = this.commands.converter.toSafeCommand(newLens.command ? newLens.command : CodeLensAdapter.BAD_CMD, disposables);
         return symbol;
     }
+
+    async releaseCodeLens(id: number): Promise<void> {
+        this.cache.delete(id);
+        const toDispose = this.disposables.get(id);
+        if (toDispose) {
+            toDispose.dispose();
+            this.disposables.delete(id);
+        }
+    }
 }

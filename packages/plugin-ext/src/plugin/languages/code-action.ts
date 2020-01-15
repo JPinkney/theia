@@ -100,6 +100,15 @@ export class CodeActionAdapter {
         return result;
     }
 
+    async releaseCodeActions(id: number): Promise<void> {
+        this.cache.delete(id);
+        const toDispose = this.disposables.get(id);
+        if (toDispose) {
+            toDispose.dispose();
+            this.disposables.delete(id);
+        }
+    }
+
     // tslint:disable-next-line:no-any
     private static _isCommand(smth: any): smth is theia.Command {
         return typeof (<theia.Command>smth).command === 'string' || typeof (<theia.Command>smth).id === 'string';

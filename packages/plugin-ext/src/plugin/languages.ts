@@ -414,6 +414,10 @@ export class LanguagesExtImpl implements LanguagesExt {
         return this.withAdapter(handle, LinkProviderAdapter, adapter => adapter.resolveLink(link, token));
     }
 
+    $releaseDocumentLinks(handle: number, id: number): void {
+        this.withAdapter(handle, LinkProviderAdapter, async adapter => adapter.releaseLink(id));
+    }
+
     registerLinkProvider(selector: theia.DocumentSelector, provider: theia.DocumentLinkProvider, pluginInfo: PluginInfo): theia.Disposable {
         const callId = this.addNewAdapter(new LinkProviderAdapter(provider, this.documents));
         this.proxy.$registerDocumentLinkProvider(callId, pluginInfo, this.transformDocumentSelector(selector));
@@ -447,6 +451,10 @@ export class LanguagesExtImpl implements LanguagesExt {
     ): Promise<CodeAction[] | undefined> {
         return this.withAdapter(handle, CodeActionAdapter, adapter => adapter.provideCodeAction(URI.revive(resource), rangeOrSelection, context, token));
     }
+
+    $releaseCodeActions(handle: number, id: number): void {
+        this.withAdapter(handle, CodeActionAdapter, async adapter => adapter.releaseCodeActions(id));
+    }
     // ### Code Actions Provider end
 
     // ### Code Lens Provider begin
@@ -470,6 +478,10 @@ export class LanguagesExtImpl implements LanguagesExt {
 
     $resolveCodeLens(handle: number, resource: UriComponents, symbol: CodeLensSymbol, token: theia.CancellationToken): Promise<CodeLensSymbol | undefined> {
         return this.withAdapter(handle, CodeLensAdapter, adapter => adapter.resolveCodeLens(URI.revive(resource), symbol, token));
+    }
+
+    $releaseCodeLenses(handle: number, cacheId: number): void {
+        this.withAdapter(handle, CodeLensAdapter, async adapter => adapter.releaseCodeLens(cacheId));
     }
     // ### Code Lens Provider end
 

@@ -1171,8 +1171,10 @@ export interface LanguagesExt {
     ): Promise<TextEdit[] | undefined>;
     $provideDocumentLinks(handle: number, resource: UriComponents, token: CancellationToken): Promise<DocumentLink[] | undefined>;
     $resolveDocumentLink(handle: number, link: DocumentLink, token: CancellationToken): Promise<DocumentLink | undefined>;
+    $releaseDocumentLinks(handle: number, id: number): void;
     $provideCodeLenses(handle: number, resource: UriComponents, token: CancellationToken): Promise<CodeLensSymbol[] | undefined>;
     $resolveCodeLens(handle: number, resource: UriComponents, symbol: CodeLensSymbol, token: CancellationToken): Promise<CodeLensSymbol | undefined>;
+    $releaseCodeLenses(handle: number, id: number): void;
     $provideCodeActions(
         handle: number,
         resource: UriComponents,
@@ -1180,6 +1182,7 @@ export interface LanguagesExt {
         context: CodeActionContext,
         token: CancellationToken
     ): Promise<CodeAction[] | undefined>;
+    $releaseCodeActions(handle: number, id: number): void;
     $provideDocumentSymbols(handle: number, resource: UriComponents, token: CancellationToken): Promise<DocumentSymbol[] | undefined>;
     $provideWorkspaceSymbols(handle: number, query: string, token: CancellationToken): PromiseLike<SymbolInformation[]>;
     $resolveWorkspaceSymbol(handle: number, symbol: SymbolInformation, token: CancellationToken): PromiseLike<SymbolInformation>;

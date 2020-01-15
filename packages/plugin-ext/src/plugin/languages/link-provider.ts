@@ -70,4 +70,13 @@ export class LinkProviderAdapter {
             return undefined;
         });
     }
+
+    async releaseLink(id: number): Promise<void> {
+        this.cache.delete(id);
+        const toDispose = this.disposables.get(id);
+        if (toDispose) {
+            toDispose.dispose();
+            this.disposables.delete(id);
+        }
+    }
 }

@@ -143,9 +143,9 @@ export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
 @injectable()
 export class TreeViewsMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     class: any;
 
     @inject(TreeViewsMainImpl)

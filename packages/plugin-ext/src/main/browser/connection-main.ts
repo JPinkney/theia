@@ -117,9 +117,9 @@ export class ConnectionMainImpl implements ConnectionMain, Disposable {
 @injectable()
 export class ConnectionMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     class: any;
 
     @inject(ConnectionMainImpl)

@@ -147,9 +147,9 @@ export class TerminalServiceMainImpl implements TerminalServiceMain, Disposable 
 @injectable()
 export class TerminalMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     class: any;
 
     @inject(TerminalServiceMainImpl)

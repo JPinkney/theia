@@ -393,9 +393,9 @@ export class PluginScmResource implements ScmResource {
 @injectable()
 export class ScmMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     class: any;
 
     @inject(ScmMainImpl)

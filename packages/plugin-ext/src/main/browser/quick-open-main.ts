@@ -369,9 +369,9 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel, Disposa
 @injectable()
 export class QuickOpenMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     class: any;
 
     @inject(QuickOpenMainImpl)

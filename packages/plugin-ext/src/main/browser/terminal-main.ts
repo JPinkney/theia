@@ -32,8 +32,6 @@ export class TerminalServiceMainImpl implements TerminalServiceMain, Disposable,
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TERMINAL_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(TerminalService)
     private readonly terminals: TerminalService;

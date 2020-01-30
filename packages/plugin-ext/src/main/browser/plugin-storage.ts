@@ -27,8 +27,6 @@ export class StorageMainImpl implements StorageMain, RPCProtocolServiceProvider 
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.STORAGE_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(PluginServer)
     private readonly pluginServer: PluginServer;

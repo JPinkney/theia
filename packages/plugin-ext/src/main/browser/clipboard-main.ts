@@ -25,8 +25,6 @@ export class ClipboardMainImpl implements ClipboardMain, RPCProtocolServiceProvi
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.CLIPBOARD_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(ClipboardService)
     protected readonly clipboardService: ClipboardService;

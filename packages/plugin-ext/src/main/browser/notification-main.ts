@@ -26,8 +26,6 @@ export class NotificationMainImpl implements NotificationMain, Disposable, RPCPr
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.NOTIFICATION_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(ProgressService)
     private readonly progressService: ProgressService;

@@ -30,8 +30,6 @@ export const RPCProtocolServiceProvider = Symbol('RPCProtocolServiceProvider');
 export interface RPCProtocolServiceProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
 }
 
 export const RPCProtocolPluginAPIFactory = Symbol('RPCProtocolPluginAPIFactory');
@@ -52,7 +50,7 @@ export class RPCProtocolPluginAPIImpl implements RPCProtocolPluginAPI {
     initialize(): void {
         const contributions = this.serviceContribution.getContributions();
         for (const contr of contributions) {
-            this.rpc.set(contr.identifier, contr.class);
+            this.rpc.set(contr.identifier, contr);
         }
         // start listening only after all clients are subscribed to events
         this.editorsAndDocuments.listen();

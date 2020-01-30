@@ -36,8 +36,6 @@ export class WebviewsMainImpl implements WebviewsMain, Disposable, RPCProtocolSe
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.WEBVIEWS_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: WebviewsExt;
 

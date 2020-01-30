@@ -35,8 +35,6 @@ export class DecorationsMainImpl implements DecorationsMain, Disposable, RPCProt
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DECORATIONS_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: DecorationsExt;
     // TODO: why it is SCM specific? VS Code apis about any decorations for the explorer

@@ -27,8 +27,6 @@ export class StatusBarMessageRegistryMainImpl implements StatusBarMessageRegistr
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.STATUS_BAR_MESSAGE_REGISTRY_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(StatusBar)
     private readonly delegate: StatusBar;

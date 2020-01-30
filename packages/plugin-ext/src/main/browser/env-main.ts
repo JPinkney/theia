@@ -28,8 +28,6 @@ export class EnvMainImpl implements EnvMain, RPCProtocolServiceProvider {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.ENV_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(EnvVariablesServer)
     private envVariableServer: EnvVariablesServer;

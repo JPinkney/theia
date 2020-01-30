@@ -30,8 +30,6 @@ export class WindowStateMain implements WindowMain, Disposable, RPCProtocolServi
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.WINDOW_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: WindowStateExt;
 

@@ -41,8 +41,6 @@ export class LanguagesContributionMainImpl implements LanguagesContributionMain,
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.LANGUAGES_CONTRIBUTION_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(LanguageClientContributionProvider)
     private readonly languageClientContributionProvider: LanguageClientContributionProvider;

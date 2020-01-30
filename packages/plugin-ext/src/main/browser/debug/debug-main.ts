@@ -58,8 +58,6 @@ export class DebugMainImpl implements DebugMain, Disposable, RPCProtocolServiceP
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DEBUG_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private debugExt: DebugExt;
 

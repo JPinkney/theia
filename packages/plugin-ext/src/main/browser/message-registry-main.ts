@@ -26,8 +26,6 @@ export class MessageRegistryMainImpl implements MessageRegistryMain, RPCProtocol
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.MESSAGE_REGISTRY_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(MessageService)
     private readonly messageService: MessageService;

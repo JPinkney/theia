@@ -50,8 +50,6 @@ export class TextEditorsMainImpl implements TextEditorsMain, Disposable, RPCProt
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TEXT_EDITORS_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: TextEditorsExt;
     private readonly toDispose = new DisposableCollection();

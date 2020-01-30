@@ -29,8 +29,6 @@ export class TreeViewsMainImpl implements TreeViewsMain, Disposable, RPCProtocol
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TREE_VIEWS_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: TreeViewsExt;
 

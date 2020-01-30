@@ -32,8 +32,6 @@ export class ConnectionMainImpl implements ConnectionMain, Disposable, RPCProtoc
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.CONNECTION_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: ConnectionExt;
     private readonly connections = new Map<string, PluginConnection>();

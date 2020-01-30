@@ -40,8 +40,6 @@ export class ScmMainImpl implements ScmMain, Disposable, RPCProtocolServiceProvi
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.SCM_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     private proxy: ScmExt;
 

@@ -27,8 +27,6 @@ export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain,
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.OUTPUT_CHANNEL_REGISTRY_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(OutputChannelManager)
     private outputChannelManager: OutputChannelManager;

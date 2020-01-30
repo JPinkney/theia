@@ -33,9 +33,6 @@ export class CommandRegistryMainImpl implements CommandRegistryMain, Disposable,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.COMMAND_REGISTRY_MAIN;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
-
     private proxy: CommandRegistryExt;
     private readonly commands = new Map<string, Disposable>();
     private readonly handlers = new Map<string, Disposable>();

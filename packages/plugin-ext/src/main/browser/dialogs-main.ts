@@ -29,8 +29,6 @@ export class DialogsMainImpl implements DialogsMain, RPCProtocolServiceProvider 
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DIALOGS_MAIN;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any = this;
 
     @inject(WorkspaceService)
     private workspaceService: WorkspaceService;

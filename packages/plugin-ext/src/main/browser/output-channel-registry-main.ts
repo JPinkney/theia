@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { OutputWidget } from '@theia/output/lib/browser/output-widget';
 import { OutputContribution } from '@theia/output/lib/browser/output-contribution';
 import { OutputChannel, OutputChannelManager } from '@theia/output/lib/common/output-channel';
@@ -23,7 +23,12 @@ import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain {
+export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.OUTPUT_CHANNEL_REGISTRY_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(OutputChannelManager)
     private outputChannelManager: OutputChannelManager;
@@ -96,23 +101,5 @@ export class OutputChannelRegistryMainImpl implements OutputChannelRegistryMain 
         }
 
         return outputChannel;
-    }
-}
-
-@injectable()
-export class OutputChannelRegistryMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(OutputChannelRegistryMainImpl)
-    private readonly outputChannelRegistryMainImpl: OutputChannelRegistryMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.OUTPUT_CHANNEL_REGISTRY_MAIN;
-        this.class = this.outputChannelRegistryMainImpl;
     }
 }

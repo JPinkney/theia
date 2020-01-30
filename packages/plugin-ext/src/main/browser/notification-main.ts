@@ -16,13 +16,18 @@
 
 import { NotificationMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { ProgressService, Progress, ProgressMessage } from '@theia/core/lib/common';
-import { inject, injectable, postConstruct } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class NotificationMainImpl implements NotificationMain, Disposable {
+export class NotificationMainImpl implements NotificationMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.NOTIFICATION_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(ProgressService)
     private readonly progressService: ProgressService;
@@ -73,23 +78,5 @@ export class NotificationMainImpl implements NotificationMain, Disposable {
         const done = Math.min((this.progress2Work.get(id) || 0) + (item.increment || 0), 100);
         this.progress2Work.set(id, done);
         progress.report({ message: item.message, work: done ? { done, total: 100 } : undefined });
-    }
-}
-
-@injectable()
-export class NotificationMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(NotificationMainImpl)
-    private readonly notificationMain: NotificationMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.NOTIFICATION_MAIN;
-        this.class = this.notificationMain;
     }
 }

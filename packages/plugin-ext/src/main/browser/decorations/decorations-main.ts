@@ -31,7 +31,12 @@ import { ScmDecorationsService } from '@theia/scm/lib/browser/decorations/scm-de
 import { RPCProtocolServiceProvider } from '../main-context';
 
 @injectable()
-export class DecorationsMainImpl implements DecorationsMain, Disposable {
+export class DecorationsMainImpl implements DecorationsMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DECORATIONS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: DecorationsExt;
     // TODO: why it is SCM specific? VS Code apis about any decorations for the explorer
@@ -82,23 +87,5 @@ export class DecorationsMainImpl implements DecorationsMain, Disposable {
             // TODO: why to make a remote call instead of sending decoration to `$fireDidChangeDecorations` in first place?
             this.proxy.$provideDecoration(id, arg);
         }
-    }
-}
-
-@injectable()
-export class DecorationsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(DecorationsMainImpl)
-    private readonly decorationsMain: DecorationsMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.DECORATIONS_MAIN;
-        this.class = this.decorationsMain;
     }
 }

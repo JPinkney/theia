@@ -33,7 +33,13 @@ import { TaskDefinitionRegistry } from '@theia/task/lib/browser';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class TasksMainImpl implements TasksMain, Disposable {
+export class TasksMainImpl implements TasksMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TASKS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
+
     private proxy: TasksExt;
 
     @inject(TaskProviderRegistry)
@@ -205,23 +211,5 @@ export class TasksMainImpl implements TasksMain, Disposable {
             _source: taskDto.source || 'plugin',
             _scope: taskDto.scope
         });
-    }
-}
-
-@injectable()
-export class TasksMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(TasksMainImpl)
-    private readonly tasksMain: TasksMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.TASKS_MAIN;
-        this.class = this.tasksMain;
     }
 }

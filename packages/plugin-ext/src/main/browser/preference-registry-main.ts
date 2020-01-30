@@ -55,7 +55,13 @@ export function getPreferences(preferenceProviderProvider: PreferenceProviderPro
 }
 
 @injectable()
-export class PreferenceRegistryMainImpl implements PreferenceRegistryMain, Disposable {
+export class PreferenceRegistryMainImpl implements PreferenceRegistryMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.PREFERENCE_REGISTRY_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
+
     private proxy: PreferenceRegistryExt;
 
     @inject(PreferenceService)
@@ -124,22 +130,4 @@ export class PreferenceRegistryMainImpl implements PreferenceRegistryMain, Dispo
         }
     }
 
-}
-
-@injectable()
-export class PreferenceRegistryMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(PreferenceRegistryMainImpl)
-    private readonly preferenceRegistryMain: PreferenceRegistryMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.PREFERENCE_REGISTRY_MAIN;
-        this.class = this.preferenceRegistryMain;
-    }
 }

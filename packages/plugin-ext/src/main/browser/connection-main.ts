@@ -28,7 +28,12 @@ import { RPCProtocolServiceProvider } from './main-context';
  * Creates holds the connections to the plugins. Allows to send a message to the plugin by getting already created connection via id.
  */
 @injectable()
-export class ConnectionMainImpl implements ConnectionMain, Disposable {
+export class ConnectionMainImpl implements ConnectionMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.CONNECTION_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: ConnectionExt;
     private readonly connections = new Map<string, PluginConnection>();
@@ -111,23 +116,5 @@ export class ConnectionMainImpl implements ConnectionMain, Disposable {
         const toClose = new DisposableCollection(Disposable.create(() => reader.fireClose()));
         this.toDispose.push(toClose);
         return connection;
-    }
-}
-
-@injectable()
-export class ConnectionMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(ConnectionMainImpl)
-    private readonly connectionMain: ConnectionMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.CONNECTION_MAIN;
-        this.class = this.connectionMain;
     }
 }

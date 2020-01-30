@@ -25,7 +25,12 @@ import { TreeViewWidget, TreeViewNode } from './tree-view-widget';
 import { RPCProtocolServiceProvider } from '../main-context';
 
 @injectable()
-export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
+export class TreeViewsMainImpl implements TreeViewsMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TREE_VIEWS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: TreeViewsExt;
 
@@ -138,22 +143,4 @@ export class TreeViewsMainImpl implements TreeViewsMain, Disposable {
         this.toDispose.push(treeViewWidget.onDidChangeVisibility(() => updateVisible()));
     }
 
-}
-
-@injectable()
-export class TreeViewsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(TreeViewsMainImpl)
-    private readonly treeViewsMain: TreeViewsMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.TREE_VIEWS_MAIN;
-        this.class = this.treeViewsMain;
-    }
 }

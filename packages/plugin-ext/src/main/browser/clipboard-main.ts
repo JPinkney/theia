@@ -14,14 +14,19 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { ClipboardMain, PLUGIN_RPC_CONTEXT } from '../../common';
 import { ClipboardService } from '@theia/core/lib/browser/clipboard-service';
 import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class ClipboardMainImpl implements ClipboardMain {
+export class ClipboardMainImpl implements ClipboardMain, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.CLIPBOARD_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(ClipboardService)
     protected readonly clipboardService: ClipboardService;
@@ -35,22 +40,4 @@ export class ClipboardMainImpl implements ClipboardMain {
         await this.clipboardService.writeText(value);
     }
 
-}
-
-@injectable()
-export class ClipboardMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(ClipboardMainImpl)
-    private readonly clipboardMain: ClipboardMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.CLIPBOARD_MAIN;
-        this.class = this.clipboardMain;
-    }
 }

@@ -79,7 +79,12 @@ export class ModelReferenceCollection {
 }
 
 @injectable()
-export class DocumentsMainImpl implements DocumentsMain, Disposable {
+export class DocumentsMainImpl implements DocumentsMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DOCUMENTS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: DocumentsExt;
     private readonly syncedModels = new Map<string, Disposable>();
@@ -266,22 +271,4 @@ export class DocumentsMainImpl implements DocumentsMain, Disposable {
         };
     }
 
-}
-
-@injectable()
-export class DocumentsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(DocumentsMainImpl)
-    private readonly documentsMainImpl: DocumentsMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.DOCUMENTS_MAIN;
-        this.class = this.documentsMainImpl;
-    }
 }

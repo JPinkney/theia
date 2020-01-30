@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { inject, injectable, postConstruct } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
 import { EnvMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { QueryParameters } from '../../common/env';
@@ -24,7 +24,12 @@ import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class EnvMainImpl implements EnvMain {
+export class EnvMainImpl implements EnvMain, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.ENV_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(EnvVariablesServer)
     private envVariableServer: EnvVariablesServer;
@@ -84,22 +89,4 @@ export function getQueryParameters(): QueryParameters {
         }
     }
     return queryParameters;
-}
-
-@injectable()
-export class EnvMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(EnvMainImpl)
-    private readonly envMain: EnvMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.ENV_MAIN;
-        this.class = this.envMain;
-    }
 }

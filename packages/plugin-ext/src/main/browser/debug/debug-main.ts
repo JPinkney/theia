@@ -54,7 +54,13 @@ import { DebugFunctionBreakpoint } from '@theia/debug/lib/browser/model/debug-fu
 import { RPCProtocolServiceProvider } from '../main-context';
 
 @injectable()
-export class DebugMainImpl implements DebugMain, Disposable {
+export class DebugMainImpl implements DebugMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DEBUG_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
+
     private debugExt: DebugExt;
 
     @inject(DebugSessionManager)
@@ -322,23 +328,5 @@ export class DebugMainImpl implements DebugMain, Disposable {
             enabled: breakpoint.enabled,
             functionName: breakpoint.raw.name
         };
-    }
-}
-
-@injectable()
-export class DebugMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // tslint:disable-next-line:no-any
-    identifier: ProxyIdentifier<any>;
-    // tslint:disable-next-line:no-any
-    class: any;
-
-    @inject(DebugMainImpl)
-    private readonly debugMain: DebugMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.DEBUG_MAIN;
-        this.class = this.debugMain;
     }
 }

@@ -46,7 +46,12 @@ import { QuickTitleButtonSide, QuickOpenGroupItem } from '@theia/core/lib/common
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel, Disposable {
+export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.QUICK_OPEN_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(QuickInputService)
     private quickInput: QuickInputService;
@@ -364,22 +369,4 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel, Disposa
         this.delegate.hide();
     }
 
-}
-
-@injectable()
-export class QuickOpenMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(QuickOpenMainImpl)
-    private readonly quickOpenMainImpl: QuickOpenMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.QUICK_OPEN_MAIN;
-        this.class = this.quickOpenMainImpl;
-    }
 }

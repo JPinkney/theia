@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import {
     LanguagesContributionMain, MAIN_RPC_CONTEXT, PLUGIN_RPC_CONTEXT
 } from '../../common/plugin-api-rpc';
@@ -37,7 +37,12 @@ import { RPCProtocolServiceProvider } from './main-context';
  * Uses for registering new language server which was described in the plug-in.
  */
 @injectable()
-export class LanguagesContributionMainImpl implements LanguagesContributionMain, Disposable {
+export class LanguagesContributionMainImpl implements LanguagesContributionMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.LANGUAGES_CONTRIBUTION_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(LanguageClientContributionProvider)
     private readonly languageClientContributionProvider: LanguageClientContributionProvider;
@@ -180,22 +185,4 @@ class PluginLanguageClientContribution extends BaseLanguageClientContribution {
         this._languageClient!.start();
     }
 
-}
-
-@injectable()
-export class LanguagesContributionServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(LanguagesContributionMainImpl)
-    private readonly languagesContributionMain: LanguagesContributionMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.LANGUAGES_CONTRIBUTION_MAIN;
-        this.class = this.languagesContributionMain;
-    }
 }

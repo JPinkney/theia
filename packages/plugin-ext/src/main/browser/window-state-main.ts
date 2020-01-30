@@ -26,7 +26,12 @@ import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposa
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class WindowStateMain implements WindowMain, Disposable {
+export class WindowStateMain implements WindowMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.WINDOW_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: WindowStateExt;
 
@@ -78,22 +83,4 @@ export class WindowStateMain implements WindowMain, Disposable {
         return URI.parse(resolved.toString());
     }
 
-}
-
-@injectable()
-export class WindowStateMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(WindowStateMain)
-    private readonly windowStateMain: WindowMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.WINDOW_MAIN;
-        this.class = this.windowStateMain;
-    }
 }

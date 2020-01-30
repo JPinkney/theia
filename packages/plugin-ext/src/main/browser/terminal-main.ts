@@ -28,7 +28,12 @@ import { RPCProtocolServiceProvider } from './main-context';
  * Plugin api service allows working with terminal emulator.
  */
 @injectable()
-export class TerminalServiceMainImpl implements TerminalServiceMain, Disposable {
+export class TerminalServiceMainImpl implements TerminalServiceMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TERMINAL_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(TerminalService)
     private readonly terminals: TerminalService;
@@ -141,23 +146,5 @@ export class TerminalServiceMainImpl implements TerminalServiceMain, Disposable 
         if (terminal) {
             terminal.dispose();
         }
-    }
-}
-
-@injectable()
-export class TerminalMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(TerminalServiceMainImpl)
-    private readonly terminalMain: TerminalServiceMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.TERMINAL_MAIN;
-        this.class = this.terminalMain;
     }
 }

@@ -36,7 +36,13 @@ import { ColorRegistry } from '@theia/core/lib/browser/color-registry';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class ScmMainImpl implements ScmMain, Disposable {
+export class ScmMainImpl implements ScmMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.SCM_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
+
     private proxy: ScmExt;
 
     @inject(ScmService)
@@ -387,23 +393,5 @@ export class PluginScmResource implements ScmResource {
 
     open(): Promise<void> {
         return this.proxy.$executeResourceCommand(this.group.provider.handle, this.group.handle, this.handle);
-    }
-}
-
-@injectable()
-export class ScmMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(ScmMainImpl)
-    private readonly scmMain: ScmMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.SCM_MAIN;
-        this.class = this.scmMain;
     }
 }

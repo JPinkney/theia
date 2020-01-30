@@ -13,7 +13,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import * as types from '../../plugin/types-impl';
 import { StatusBarMessageRegistryMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
@@ -23,7 +23,12 @@ import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class StatusBarMessageRegistryMainImpl implements StatusBarMessageRegistryMain, Disposable {
+export class StatusBarMessageRegistryMainImpl implements StatusBarMessageRegistryMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.STATUS_BAR_MESSAGE_REGISTRY_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(StatusBar)
     private readonly delegate: StatusBar;
@@ -81,22 +86,4 @@ export class StatusBarMessageRegistryMainImpl implements StatusBarMessageRegistr
         }
     }
 
-}
-
-@injectable()
-export class StatusBarMessageRegistryMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(StatusBarMessageRegistryMainImpl)
-    private readonly statusBarMessageRegistryMain: StatusBarMessageRegistryMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.STATUS_BAR_MESSAGE_REGISTRY_MAIN;
-        this.class = this.statusBarMessageRegistryMain;
-    }
 }

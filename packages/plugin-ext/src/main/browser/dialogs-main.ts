@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { OpenDialogOptionsMain, SaveDialogOptionsMain, DialogsMain, UploadDialogOptionsMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { DirNode, OpenFileDialogProps, SaveFileDialogProps, OpenFileDialogFactory, SaveFileDialogFactory } from '@theia/filesystem/lib/browser';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import { FileSystem, FileStat } from '@theia/filesystem/lib/common';
@@ -25,7 +25,12 @@ import { ProxyIdentifier } from '../../common/rpc-protocol';
 import { FileUploadService } from '@theia/filesystem/lib/browser/file-upload-service';
 
 @injectable()
-export class DialogsMainImpl implements DialogsMain {
+export class DialogsMainImpl implements DialogsMain, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.DIALOGS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(WorkspaceService)
     private workspaceService: WorkspaceService;
@@ -172,22 +177,4 @@ export class DialogsMainImpl implements DialogsMain {
         return undefined;
     }
 
-}
-
-@injectable()
-export class DialogsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(DialogsMainImpl)
-    private readonly dialogsMainImpl: DialogsMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.DIALOGS_MAIN;
-        this.class = this.dialogsMainImpl;
-    }
 }

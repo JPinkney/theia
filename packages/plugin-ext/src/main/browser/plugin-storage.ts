@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, postConstruct } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { StorageMain, PLUGIN_RPC_CONTEXT } from '../../common/plugin-api-rpc';
 import { PluginServer, PluginStorageKind } from '../../common/plugin-protocol';
 import { KeysToAnyValues, KeysToKeysToAnyValue } from '../../common/types';
@@ -23,7 +23,12 @@ import { RPCProtocolServiceProvider } from './main-context';
 import { ProxyIdentifier } from '../../common/rpc-protocol';
 
 @injectable()
-export class StorageMainImpl implements StorageMain {
+export class StorageMainImpl implements StorageMain, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.STORAGE_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(PluginServer)
     private readonly pluginServer: PluginServer;
@@ -53,22 +58,4 @@ export class StorageMainImpl implements StorageMain {
         };
     }
 
-}
-
-@injectable()
-export class PluginStorageMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(StorageMainImpl)
-    private readonly storageMain: StorageMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.STORAGE_MAIN;
-        this.class = this.storageMain;
-    }
 }

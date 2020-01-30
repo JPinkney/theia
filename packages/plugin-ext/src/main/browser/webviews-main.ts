@@ -32,7 +32,12 @@ import { IconUrl } from '../../common/plugin-protocol';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class WebviewsMainImpl implements WebviewsMain, Disposable {
+export class WebviewsMainImpl implements WebviewsMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.WEBVIEWS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: WebviewsExt;
 
@@ -265,22 +270,4 @@ export class WebviewsMainImpl implements WebviewsMain, Disposable {
         return this.widgets.getWidget<WebviewWidget>(WebviewWidget.FACTORY_ID, <WebviewWidgetIdentifier>{ id });
     }
 
-}
-
-@injectable()
-export class WebviewsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(WebviewsMainImpl)
-    private readonly webviewsMain: WebviewsMain;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.WEBVIEWS_MAIN;
-        this.class = this.webviewsMain;
-    }
 }

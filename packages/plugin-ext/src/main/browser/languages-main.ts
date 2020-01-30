@@ -59,7 +59,12 @@ import { Position, DocumentUri } from 'vscode-languageserver-types';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class LanguagesMainImpl implements LanguagesMain, Disposable {
+export class LanguagesMainImpl implements LanguagesMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.LANGUAGES_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     @inject(MonacoLanguages)
     private readonly monacoLanguages: MonacoLanguages;

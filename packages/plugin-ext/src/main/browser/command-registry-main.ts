@@ -28,7 +28,14 @@ import {
 } from '../../common/plugin-api-rpc';
 
 @injectable()
-export class CommandRegistryMainImpl implements CommandRegistryMain, Disposable {
+export class CommandRegistryMainImpl implements CommandRegistryMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.COMMAND_REGISTRY_MAIN;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
+
     private proxy: CommandRegistryExt;
     private readonly commands = new Map<string, Disposable>();
     private readonly handlers = new Map<string, Disposable>();
@@ -121,20 +128,20 @@ export class CommandRegistryMainImpl implements CommandRegistryMain, Disposable 
 
 }
 
-@injectable()
-export class CommandRegistryMainServiceProvider implements RPCProtocolServiceProvider {
+// @injectable()
+// export class CommandRegistryMainServiceProvider implements RPCProtocolServiceProvider {
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     identifier: ProxyIdentifier<any>;
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     class: any;
 
-    @inject(CommandRegistryMainImpl)
-    private readonly commandRegistryMain: CommandRegistryMain;
+//     @inject(CommandRegistryMainImpl)
+//     private readonly commandRegistryMain: CommandRegistryMain;
 
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.COMMAND_REGISTRY_MAIN;
-        this.class = this.commandRegistryMain;
-    }
-}
+//     @postConstruct()
+//     protected init(): void {
+//         this.identifier = PLUGIN_RPC_CONTEXT.COMMAND_REGISTRY_MAIN;
+//         this.class = this.commandRegistryMain;
+//     }
+// }

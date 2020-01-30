@@ -46,7 +46,12 @@ import { injectable, inject, postConstruct } from 'inversify';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class TextEditorsMainImpl implements TextEditorsMain, Disposable {
+export class TextEditorsMainImpl implements TextEditorsMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.TEXT_EDITORS_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: TextEditorsExt;
     private readonly toDispose = new DisposableCollection();
@@ -198,22 +203,4 @@ export class TextEditorsMainImpl implements TextEditorsMain, Disposable {
         return this.editorsAndDocuments.saveAll(includeUntitled);
     }
 
-}
-
-@injectable()
-export class TextEditorsMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(TextEditorsMainImpl)
-    private readonly textEditorsMainImpl: TextEditorsMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.TEXT_EDITORS_MAIN;
-        this.class = this.textEditorsMainImpl;
-    }
 }

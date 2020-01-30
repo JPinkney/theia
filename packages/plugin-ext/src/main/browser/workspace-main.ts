@@ -35,7 +35,12 @@ import { TextContentResourceResolver } from './text-content-resource';
 import { RPCProtocolServiceProvider } from './main-context';
 
 @injectable()
-export class WorkspaceMainImpl implements WorkspaceMain, Disposable {
+export class WorkspaceMainImpl implements WorkspaceMain, Disposable, RPCProtocolServiceProvider {
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    identifier: ProxyIdentifier<any> = PLUGIN_RPC_CONTEXT.WORKSPACE_MAIN;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    class: any = this;
 
     private proxy: WorkspaceExt;
 
@@ -228,22 +233,4 @@ export class WorkspaceMainImpl implements WorkspaceMain, Disposable {
         await this.workspaceService.spliceRoots(start, deleteCount, ...rootsToAdd.map(root => new URI(root)));
     }
 
-}
-
-@injectable()
-export class WorkspaceMainServiceProvider implements RPCProtocolServiceProvider {
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    identifier: ProxyIdentifier<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    class: any;
-
-    @inject(WorkspaceMainImpl)
-    private readonly workspaceMainImpl: WorkspaceMainImpl;
-
-    @postConstruct()
-    protected init(): void {
-        this.identifier = PLUGIN_RPC_CONTEXT.WORKSPACE_MAIN;
-        this.class = this.workspaceMainImpl;
-    }
 }

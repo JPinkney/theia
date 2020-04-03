@@ -35,7 +35,16 @@ import {
     Location,
     CallHierarchyItem,
     CallHierarchyIncomingCall,
-    CallHierarchyOutgoingCall
+    CallHierarchyOutgoingCall,
+    FormattingOptions,
+    DocumentHighlight,
+    WorkspaceEdit,
+    SignatureHelp,
+    Range,
+    TextEdit,
+    DocumentLink,
+    ColorInformation,
+    Hover
 } from '@theia/plugin-ext/lib/common/plugin-api-rpc-model';
 import { DocumentsMainImpl } from '@theia/plugin-ext/lib/main/browser/documents-main';
 import { createUntitledURI } from '@theia/plugin-ext/lib/main/browser/editor/untitled-resource';
@@ -48,6 +57,11 @@ import { MonacoEditor } from '@theia/monaco/lib/browser/monaco-editor';
 import { inject, injectable } from 'inversify';
 import { Position } from '@theia/plugin-ext/lib/common/plugin-api-rpc';
 import URI from 'vscode-uri';
+import {
+    SymbolInformation,
+    CompletionList
+} from '@theia/plugin-ext/lib/plugin/types-impl';
+import { CodeLensSymbol } from '@theia/plugin-ext/lib/common/plugin-api-rpc-model';
 
 export namespace VscodeCommands {
     export const OPEN: Command = {
@@ -372,27 +386,24 @@ export class PluginVscodeCommandsContribution implements CommandContribution {
         // Register built-in language service commands
         // see https://code.visualstudio.com/api/references/commands
         /* eslint-disable @typescript-eslint/no-explicit-any */
-        commands.registerCommand(
-            {
-                id: 'vscode.executeDocumentSymbolProvider'
-            },
-            {
-                execute: (resource: URI) => commands.executeCommand('_executeDocumentSymbolProvider',
-                    { resource: monaco.Uri.parse(resource.toString()) }
-                ).then((value: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-                    if (!Array.isArray(value) || value === undefined) {
-                        return undefined;
-                    }
-                    return value.map(loc => toDocumentSymbol(loc));
-                })
-            }
-        );
-
         // TODO register other `vscode.execute...` commands.
         // see https://github.com/microsoft/vscode/blob/master/src/vs/workbench/api/common/extHostApiCommands.ts
         commands.registerCommand(
             {
-                id: 'vscode.executeReferenceProvider'
+                id: 'vscode.executeWorkspaceSymbolProvider'
+            },
+            {
+                execute: (query: string) => {
+                    const args = {
+                        query: query
+                    };
+                    return commands.executeCommand<SymbolInformation[]>('_executeWorkspaceSymbolProvider', args);
+                }
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDefinitionProvider'
             },
             {
                 execute: ((resource: URI, position: Position) => {
@@ -400,7 +411,35 @@ export class PluginVscodeCommandsContribution implements CommandContribution {
                         resource: monaco.Uri.from(resource),
                         position: position
                     };
-                    return commands.executeCommand<Location[]>('_executeReferenceProvider', args);
+                    return commands.executeCommand<Location[]>('_executeDefinitionProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDeclarationProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position
+                    };
+                    return commands.executeCommand<Location[]>('_executeDeclarationProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeTypeDefinitionProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position
+                    };
+                    return commands.executeCommand<Location[]>('_executeTypeDefinitionProvider', args);
                 })
             }
         );
@@ -418,6 +457,223 @@ export class PluginVscodeCommandsContribution implements CommandContribution {
                 })
             }
         );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeHoverProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position
+                    };
+                    return commands.executeCommand<Hover[]>('_executeHoverProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDocumentHighlights'
+            },
+            {
+                execute: ((resource: URI, position: Position) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position
+                    };
+                    return commands.executeCommand<DocumentHighlight[]>('_executeDocumentHighlights', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeReferenceProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position
+                    };
+                    return commands.executeCommand<Location[]>('_executeReferenceProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDocumentRenameProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position, newName: string) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position,
+                        newName: newName
+                    };
+                    return commands.executeCommand<WorkspaceEdit[]>('_executeDocumentRenameProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeSignatureHelpProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position, triggerCharacter?: string) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position,
+                        triggerCharacter: triggerCharacter
+                    };
+                    return commands.executeCommand<SignatureHelp[]>('_executeSignatureHelpProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDocumentSymbolProvider'
+            },
+            {
+                execute: (resource: URI) => commands.executeCommand('_executeDocumentSymbolProvider',
+                    { resource: monaco.Uri.parse(resource.toString()) }
+                ).then((value: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+                    if (!Array.isArray(value) || value === undefined) {
+                        return undefined;
+                    }
+                    return value.map(loc => toDocumentSymbol(loc));
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeCompletionItemProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position, triggerCharacter?: string, itemResolveCount?: number) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position,
+                        triggerCharacter: triggerCharacter,
+                        itemResolveCount: itemResolveCount
+                    };
+                    return commands.executeCommand<CompletionList[]>('_executeCompletionItemProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeCodeActionProvider'
+            },
+            {
+                execute: ((resource: URI, range: Range) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        range: range
+                    };
+                    return commands.executeCommand<Command[]>('_executeCodeActionProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeCodeLensProvider'
+            },
+            {
+                execute: ((resource: URI, itemResolveCount: number) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        itemResolveCount: itemResolveCount
+                    };
+                    return commands.executeCommand<CodeLensSymbol[]>('_executeCodeLensProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeFormatDocumentProvider'
+            },
+            {
+                execute: ((resource: URI, options: FormattingOptions) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        options: options
+                    };
+                    return commands.executeCommand<TextEdit[]>('_executeFormatDocumentProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeFormatRangeProvider'
+            },
+            {
+                execute: ((resource: URI, range: Range, options: FormattingOptions) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        range: range,
+                        options: options
+                    };
+                    return commands.executeCommand<TextEdit[]>('_executeFormatRangeProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeFormatOnTypeProvider'
+            },
+            {
+                execute: ((resource: URI, position: Position, ch: string, options: FormattingOptions) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource),
+                        position: position,
+                        ch: ch,
+                        options: options
+                    };
+                    return commands.executeCommand<TextEdit[]>('_executeFormatOnTypeProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeLinkProvider'
+            },
+            {
+                execute: ((resource: URI) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource)
+                    };
+                    return commands.executeCommand<DocumentLink[]>('_executeLinkProvider', args);
+                })
+            }
+        );
+        commands.registerCommand(
+            {
+                id: 'vscode.executeDocumentColorProvider'
+            },
+            {
+                execute: ((resource: URI) => {
+                    const args = {
+                        resource: monaco.Uri.from(resource)
+                    };
+                    return commands.executeCommand<ColorInformation[]>('_executeDocumentColorProvider', args);
+                })
+            }
+        );
+        // fix me
+        // commands.registerCommand(
+        //     {
+        //         id: 'vscode.executeColorPresentationProvider'
+        //     },
+        //     {
+        //         execute: ((color: Color, context: Context) => {
+        //             const args = {
+        //                 color,
+        //                 context
+        //             };
+        //             return commands.executeCommand<ColorPresentation[]>('_executeColorPresentationProvider', args);
+        //         })
+        //     }
+        // );
         commands.registerCommand(
             {
                 id: 'vscode.prepareCallHierarchy'
